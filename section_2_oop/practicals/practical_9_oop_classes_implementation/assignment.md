@@ -1,414 +1,577 @@
 # Практическое занятие 9: ООП - реализация классов
 
-## Создание классов, атрибуты, методы, конструкторы
+## Создание классов игровых сущностей, атрибуты, методы, конструкторы
 
 ### Цель занятия:
-Научиться создавать классы в Python, определять атрибуты и методы, использовать конструкторы и деструкторы.
+Научиться создавать классы в Python, определять атрибуты и методы, использовать конструкторы и деструкторы на примере игровых сущностей.
 
 ### Задачи:
-1. Создать классы с атрибутами и методами
+1. Создать классы игровых сущностей с атрибутами и методами
 2. Использовать конструкторы и деструкторы
 3. Реализовать инкапсуляцию
-4. Применить принципы ООП на практике
+4. Применить принципы ООП на практике в игровом контексте
 
 ### План работы:
-1. Создание простого класса
+1. Создание простого класса игровой сущности
 2. Определение атрибутов и методов
 3. Использование конструктора и деструктора
 4. Применение принципов инкапсуляции
 5. Создание экземпляров класса
-6. Практические задания
+6. Практические задания в игровом контексте
 
 ---
 
-## 1. Создание простого класса
+## 1. Создание простого класса игровой сущности
 
-### Пример 1: Класс Person
+### Пример 1: Класс GameCharacter
 
 ```python
-class Person:
+class GameCharacter:
     """
-    Класс для представления человека
+    Класс для представления игрового персонажа
     """
-    def __init__(self, name, age, email):
+    def __init__(self, name, health, attack_power, character_class="warrior"):
         """
-        Конструктор класса Person
+        Конструктор класса GameCharacter
         
         Args:
-            name (str): Имя человека
-            age (int): Возраст человека
-            email (str): Email человека
+            name (str): Имя персонажа
+            health (int): Здоровье персонажа
+            attack_power (int): Сила атаки персонажа
+            character_class (str): Класс персонажа
         """
         self.name = name
-        self.age = age
-        self.email = email
+        self.health = health
+        self.max_health = health
+        self.attack_power = attack_power
+        self.character_class = character_class
+        self.level = 1
+        self.experience = 0
+        self.inventory = []
         self.created_at = __import__('datetime').datetime.now()
     
     def introduce(self):
         """
-        Метод для представления человека
+        Метод для представления персонажа
         """
-        return f"Привет, меня зовут {self.name}, мне {self.age} лет"
+        return f"Привет, я {self.name}, {self.character_class} {self.level} уровня"
     
-    def is_adult(self):
+    def is_alive(self):
         """
-        Проверка, является ли человек совершеннолетним
+        Проверка, жив ли персонаж
         """
-        return self.age >= 18
+        return self.health > 0
+    
+    def take_damage(self, damage):
+        """
+        Получить урон
+        """
+        self.health = max(0, self.health - damage)
+        return damage
+    
+    def heal(self, amount):
+        """
+        Восстановить здоровье
+        """
+        old_health = self.health
+        self.health = min(self.max_health, self.health + amount)
+        return self.health - old_health
+    
+    def gain_experience(self, exp):
+        """
+        Получить опыт и возможно повысить уровень
+        """
+        self.experience += exp
+        # Проверяем, нужно ли повысить уровень
+        exp_needed = self.level * 100
+        if self.experience >= exp_needed:
+            self.level_up()
+    
+    def level_up(self):
+        """
+        Повысить уровень персонажа
+        """
+        self.level += 1
+        self.max_health += 20
+        self.health = self.max_health
+        self.attack_power += 5
+        self.experience = 0
+        print(f"{self.name} достиг {self.level} уровня!")
     
     def __str__(self):
         """
         Строковое представление объекта
         """
-        return f"Person(name='{self.name}', age={self.age}, email='{self.email}')"
+        return f"GameCharacter(name='{self.name}', class='{self.character_class}', level={self.level}, health={self.health}/{self.max_health})"
 
 # Создание экземпляра класса
-person1 = Person("Иван Иванов", 30, "ivan@example.com")
-print(person1.introduce())  # Привет, меня зовут Иван Иванов, мне 30 лет
-print(f"Совершеннолетний: {person1.is_adult()}")  # Совершеннолетний: True
-print(person1)  # Person(name='Иван Иванов', age=30, email='ivan@example.com')
+hero = GameCharacter("Артур", 100, 20, "warrior")
+print(hero.introduce())  # Привет, я Артур, warrior 1 уровня
+print(f"Жив: {hero.is_alive()}")  # Жив: True
+print(hero)  # GameCharacter(name='Артур', class='warrior', level=1, health=100/100)
 ```
 
-### Пример 2: Класс BankAccount
+### Пример 2: Класс GameItem
 
 ```python
-class BankAccount:
+class GameItem:
     """
-    Класс банковского счета
+    Класс игрового предмета
     """
-    bank_name = "Тестовый банк"  # Атрибут класса
+    item_types = ["weapon", "armor", "potion", "quest_item"]  # Атрибут класса
     
-    def __init__(self, owner_name, initial_balance=0):
+    def __init__(self, name, item_type, value=0, weight=1.0, durability=100):
         """
-        Конструктор банковского счета
+        Конструктор игрового предмета
         
         Args:
-            owner_name (str): Имя владельца счета
-            initial_balance (float): Начальный баланс
+            name (str): Название предмета
+            item_type (str): Тип предмета
+            value (int): Стоимость предмета
+            weight (float): Вес предмета
+            durability (int): Прочность предмета
         """
-        self.owner_name = owner_name  # Атрибут экземпляра
-        self._balance = initial_balance  # Защищенный атрибут (инкапсуляция)
-        self._transactions = []  # История транзакций
+        self.name = name  # Атрибут экземпляра
+        self.item_type = item_type if item_type in GameItem.item_types else "misc"
+        self.value = value
+        self.weight = weight
+        self.durability = durability
+        self._effects = {}  # Защищенный атрибут (инкапсуляция)
+        self.created_at = __import__('datetime').datetime.now()
     
-    def deposit(self, amount):
+    def add_effect(self, effect_name, effect_value):
         """
-        Внести деньги на счет
+        Добавить эффект к предмету
         
         Args:
-            amount (float): Сумма для внесения
+            effect_name (str): Название эффекта
+            effect_value (any): Значение эффекта
         """
-        if amount <= 0:
-            raise ValueError("Сумма внесения должна быть положительной")
-        
-        self._balance += amount
-        self._transactions.append({
-            "type": "deposit",
-            "amount": amount,
-            "timestamp": __import__('datetime').datetime.now()
-        })
-        return self._balance
+        self._effects[effect_name] = effect_value
     
-    def withdraw(self, amount):
+    def get_effects(self):
         """
-        Снять деньги со счета
-        
-        Args:
-            amount (float): Сумма для снятия
+        Получить все эффекты предмета
         """
-        if amount <= 0:
-            raise ValueError("Сумма снятия должна быть положительной")
-        
-        if amount > self._balance:
-            raise ValueError("Недостаточно средств на счете")
-        
-        self._balance -= amount
-        self._transactions.append({
-            "type": "withdraw",
-            "amount": -amount,
-            "timestamp": __import__('datetime').datetime.now()
-        })
-        return self._balance
+        return self._effects.copy()
     
-    def get_balance(self):
+    def use(self, target_character):
         """
-        Получить баланс счета
+        Использовать предмет на персонаже
         """
-        return self._balance
+        if self.item_type == "potion":
+            if "heal" in self._effects:
+                healed = target_character.heal(self._effects["heal"])
+                self.durability -= 10
+                print(f"{target_character.name} восстановил {healed} здоровья с помощью {self.name}")
+                return healed
+        elif self.item_type == "weapon":
+            if "damage" in self._effects:
+                target_character.attack_power += self._effects["damage"]
+                print(f"{target_character.name} получил бонус к атаке +{self._effects['damage']} от {self.name}")
+        return 0
     
-    def get_transactions(self):
+    def is_broken(self):
         """
-        Получить историю транзакций
+        Проверить, сломан ли предмет
         """
-        return self._transactions.copy()
+        return self.durability <= 0
     
     def __del__(self):
         """
         Деструктор класса
         """
-        print(f"Счет для {self.owner_name} закрывается...")
+        print(f"Предмет {self.name} удален из игры...")
 
 # Пример использования
-account = BankAccount("Иван Иванов", 1000)
-print(f"Баланс: {account.get_balance()}")  # Баланс: 1000
+health_potion = GameItem("Зелье здоровья", "potion", 25, 0.5, 1)
+health_potion.add_effect("heal", 30)
 
-account.deposit(500)
-print(f"Баланс после внесения: {account.get_balance()}")  # Баланс после внесения: 1500
+sword = GameItem("Меч героя", "weapon", 150, 5.0, 100)
+sword.add_effect("damage", 10)
 
-account.withdraw(200)
-print(f"Баланс после снятия: {account.get_balance()}")  # Баланс после снятия: 1300
+print(f"Тип предмета: {health_potion.item_type}")  # Тип предмета: potion
+print(f"Эффекты: {health_potion.get_effects()}")   # Эффекты: {'heal': 30}
 ```
 
 ---
 
-## 2. Атрибуты и методы класса
+## 2. Атрибуты и методы класса в игровом контексте
 
 ### Атрибуты экземпляра vs Атрибуты класса
 
 ```python
-class Counter:
+class Monster:
     """
-    Класс для подсчета экземпляров
+    Класс для представления монстра
     """
-    # Атрибут класса - общий для всех экземпляров
-    total_instances = 0
+    # Атрибут класса - общий для всех монстров
+    total_killed = 0
+    common_loot_table = ["gold_coin", "health_potion_minor"]
     
-    def __init__(self, name):
+    def __init__(self, name, health, attack_power, monster_type="common"):
         self.name = name  # Атрибут экземпляра
-        self.count = 0    # Атрибут экземпляра
-        Counter.total_instances += 1  # Увеличиваем счетчик класса
+        self.health = health
+        self.max_health = health
+        self.attack_power = attack_power
+        self.monster_type = monster_type
+        self.alive = True
+        self.loot = []  # Атрибут экземпляра
     
-    def increment(self):
+    def take_damage(self, damage):
         """
-        Увеличение счетчика экземпляра
+        Получить урон
         """
-        self.count += 1
-        return self.count
+        self.health -= damage
+        if self.health <= 0:
+            self.health = 0
+            self.alive = False
+            Monster.total_killed += 1  # Увеличиваем счетчик класса
+            self.drop_loot()
+        return damage
+    
+    def drop_loot(self):
+        """
+        Выбросить лут при смерти
+        """
+        import random
+        self.loot = Monster.common_loot_table.copy()
+        if self.monster_type == "rare":
+            self.loot.append("rare_item")
+        elif self.monster_type == "boss":
+            self.loot.extend(["legendary_item", "large_gold_pile"])
+        print(f"{self.name} выбросил: {', '.join(self.loot)}")
     
     @classmethod
-    def get_total_instances(cls):
+    def get_total_killed(cls):
         """
-        Метод класса для получения общего количества экземпляров
+        Метод класса для получения общего количества убитых монстров
         """
-        return cls.total_instances
+        return cls.total_killed
     
     @staticmethod
-    def is_valid_name(name):
+    def is_difficult_monster(monster_type):
         """
-        Статический метод для проверки имени
+        Статический метод для проверки типа монстра
         """
-        return isinstance(name, str) and len(name.strip()) > 0
+        return monster_type in ["rare", "boss"]
 
 # Пример использования
-c1 = Counter("Первый")
-c2 = Counter("Второй")
-c3 = Counter("Третий")
+goblin = Monster("Гоблин", 30, 8, "common")
+orc = Monster("Орк", 60, 15, "rare")
+dragon = Monster("Дракон", 300, 50, "boss")
 
-print(f"Всего экземпляров: {Counter.get_total_instances()}")  # Всего экземпляров: 3
-print(f"Счетчик c1: {c1.increment()}")  # Счетчик c1: 1
-print(f"Счетчик c1: {c1.increment()}")  # Счетчик c1: 2
-print(f"Счетчик c2: {c2.increment()}")  # Счетчик c2: 1
+print(f"Всего убито монстров: {Monster.get_total_killed()}")  # Всего убито монстров: 0
 
-print(f"Имя c1 допустимо: {Counter.is_valid_name(c1.name)}")  # Имя c1 допустимо: True
-print(f"Имя пустой строки допустимо: {Counter.is_valid_name('')}")  # Имя пустой строки допустимо: False
+# Убиваем монстров
+goblin.take_damage(30)
+orc.take_damage(60)
+
+print(f"Всего убито монстров: {Monster.get_total_killed()}")  # Всего убито монстров: 2
+print(f"Орк редкий?: {Monster.is_difficult_monster('rare')}")  # Орк редкий?: True
 ```
 
 ---
 
-## 3. Инкапсуляция
+## 3. Инкапсуляция в игровом контексте
 
 ### Уровни доступа в Python
 
 ```python
-class Student:
+class Player:
     """
-    Класс для представления студента
+    Класс для представления игрока
     """
-    def __init__(self, name, student_id, gpa):
+    def __init__(self, name, level=1, gold=0):
         self.name = name  # Публичный атрибут
-        self._student_id = student_id  # Защищенный атрибут (соглашение)
-        self.__gpa = gpa  # Приватный атрибут (сильное соглашение)
+        self.level = level  # Публичный атрибут
+        self._experience = 0  # Защищенный атрибут (соглашение)
+        self.__password_hash = self.__hash_password("default_password")  # Приватный атрибут (сильное соглашение)
+        self.__account_balance = gold  # Приватный атрибут для игровой валюты
+        self.__login_attempts = 0  # Приватный атрибут для отслеживания попыток входа
+    
+    def __hash_password(self, password):
+        """Приватный метод для хеширования пароля"""
+        return sum(ord(c) for c in password) % 1000000 # Простой хеш для примера
     
     # Методы для доступа к приватным атрибутам
-    def get_gpa(self):
-        return self.__gpa
+    def get_account_balance(self):
+        return self.__account_balance
     
-    def set_gpa(self, gpa):
-        if 0.0 <= gpa <= 5.0:
-            self.__gpa = gpa
+    def add_gold(self, amount):
+        if amount > 0:
+            self.__account_balance += amount
+            print(f"Добавлено {amount} золота. Всего: {self.__account_balance}")
         else:
-            raise ValueError("GPA должен быть между 0.0 и 5.0")
+            print("Количество золота должно быть положительным")
+    
+    def change_password(self, old_password, new_password):
+        """Изменить пароль с проверкой старого пароля"""
+        if self.__hash_password(old_password) == self.__password_hash:
+            self.__password_hash = self.__hash_password(new_password)
+            print("Пароль успешно изменен")
+            return True
+        else:
+            print("Неверный старый пароль")
+            self.__login_attempts += 1
+            return False
     
     # Использование property
     @property
-    def gpa(self):
-        """Свойство для получения GPA"""
-        return self.__gpa
+    def experience(self):
+        """Свойство для получения опыта"""
+        return self._experience
     
-    @gpa.setter
-    def gpa(self, value):
-        """Свойство для установки GPA"""
-        if not isinstance(value, (int, float)):
-            raise TypeError("GPA должен быть числом")
-        if not 0.0 <= value <= 5.0:
-            raise ValueError("GPA должен быть между 0.0 и 5.0")
-        self.__gpa = value
+    @experience.setter
+    def experience(self, value):
+        """Свойство для установки опыта с проверкой"""
+        if value < 0:
+            raise ValueError("Опыт не может быть отрицательным")
+        old_level = self.level
+        self._experience = value
+        # Проверяем, нужно ли повысить уровень
+        exp_needed = self.level * 100
+        while self._experience >= exp_needed:
+            self.level_up()
+            exp_needed = self.level * 100
+    
+    def level_up(self):
+        """Повысить уровень игрока"""
+        self.level += 1
+        print(f"{self.name} достиг {self.level} уровня!")
     
     @property
-    def student_id(self):
-        """Свойство для получения ID студента"""
-        return self._student_id
+    def security_level(self):
+        """Свойство для получения уровня безопасности аккаунта"""
+        if self.__login_attempts == 0:
+            return "Высокий"
+        elif self.__login_attempts < 3:
+            return "Средний"
+        else:
+            return "Низкий"
 
 # Пример использования
-student = Student("Мария Петрова", "S12345", 4.5)
+player = Player("Иван", level=1, gold=100)
 
-print(f"Имя: {student.name}")  # Публичный - доступен
-print(f"ID: {student.student_id}")  # Защищенный - доступен через свойство
-print(f"GPA: {student.gpa}")  # Приватный - доступен через свойство
+print(f"Имя: {player.name}")  # Публичный - доступен
+print(f"Уровень: {player.level}")  # Публичный - доступен
+print(f"Баланс: {player.get_account_balance()}")  # Через метод
 
-# Изменение GPA
-student.gpa = 4.8
-print(f"Новый GPA: {student.gpa}")
+# Работа с опытом через свойства
+print(f"Опыт: {player.experience}")  # 0
+player.experience = 150  # Это вызовет повышение уровня до 2
+print(f"Уровень после опыта: {player.level}")  # 2
 
-# Попытка доступа к приватному атрибуту напрямую (не рекомендуется)
-print(f"Прямой доступ к GPA: {student._Student__gpa}")  # Это работает, но не рекомендуется
+# Изменение пароля
+player.change_password("default_password", "new_secure_password")
+print(f"Уровень безопасности: {player.security_level}")
 ```
 
 ---
 
-## 4. Практические задания
+## 4. Практические задания в игровом контексте
 
-### Задание 1: Класс Book
+### Задание 1: Класс Weapon
 
-Создайте класс `Book` с атрибутами: название, автор, год издания, ISBN, количество страниц.
+Создайте класс `Weapon` с атрибутами: название, тип оружия, урон, прочность, редкость.
 Реализуйте методы:
-- `get_info()` - возвращает информацию о книге
-- `is_new()` - проверяет, является ли книга новой (издана в последние 5 лет)
-- `update_pages()` - обновляет количество страниц
+- `get_info()` - возвращает информацию о оружии
+- `is_usable()` - проверяет, пригодно ли оружие к использованию
+- `upgrade()` - улучшает оружие (увеличивает урон и уменьшает прочность)
 
 ```python
-class Book:
+class Weapon:
     """
-    Класс для представления книги
+    Класс для представления оружия
     """
-    def __init__(self, title, author, year, isbn, pages):
+    weapon_types = ["melee", "ranged", "magic"]
+    rarity_levels = ["common", "uncommon", "rare", "epic", "legendary"]
+    
+    def __init__(self, name, weapon_type, base_damage, durability, rarity="common"):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        if weapon_type not in Weapon.weapon_types:
+            raise ValueError(f"Тип оружия должен быть одним из: {Weapon.weapon_types}")
+        if rarity not in Weapon.rarity_levels:
+            raise ValueError(f"Редкость должна быть одной из: {Weapon.rarity_levels}")
+            
+        self.name = name
+        self.weapon_type = weapon_type
+        self.base_damage = base_damage
+        self.durability = durability
+        self.max_durability = durability
+        self.rarity = rarity
+        self.upgrade_level = 0
     
     def get_info(self):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        return f"{self.name} ({self.rarity} {self.weapon_type}): {self.get_damage()} урона, прочность {self.durability}/{self.max_durability}"
     
-    def is_new(self):
+    def is_usable(self):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        return self.durability > 0
     
-    def update_pages(self, new_pages):
+    def upgrade(self):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        self.upgrade_level += 1
+        self.base_damage *= 1.2  # Увеличиваем урон на 20%
+        self.durability = self.max_durability # Восстанавливаем прочность при улучшении
+        print(f"{self.name} улучшен до уровня {self.upgrade_level}! Новый урон: {self.get_damage():.1f}")
+    
+    def get_damage(self):
+        """Возвращает текущий урон с учетом уровня улучшения"""
+        return self.base_damage * (1 + self.upgrade_level * 0.1)
 
 # Тестирование
-book = Book("Python Programming", "John Doe", 2023, "978-0123456789", 450)
-print(book.get_info())
-print(f"Новая книга: {book.is_new()}")
+sword = Weapon("Меч героя", "melee", 25, 100, "rare")
+print(sword.get_info())
+print(f"Пригодно к использованию: {sword.is_usable()}")
+sword.upgrade()
+print(sword.get_info())
 ```
 
-### Задание 2: Класс Library
+### Задание 2: Класс Inventory
 
-Создайте класс `Library`, который хранит список книг и предоставляет методы:
-- `add_book(book)` - добавляет книгу в библиотеку
-- `remove_book(isbn)` - удаляет книгу по ISBN
-- `find_books_by_author(author)` - находит книги по автору
-- `get_new_books()` - возвращает только новые книги
+Создайте класс `Inventory`, который хранит список предметов и предоставляет методы:
+- `add_item(item)` - добавляет предмет в инвентарь
+- `remove_item(item_name)` - удаляет предмет по имени
+- `get_items_by_type(item_type)` - находит предметы по типу
+- `get_total_weight()` - возвращает общий вес инвентаря
 
 ```python
-class Library:
+class Inventory:
     """
-    Класс для представления библиотеки
+    Класс для представления инвентаря игрока
     """
-    def __init__(self, name):
+    def __init__(self, max_capacity=10, max_weight=100):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        self.items = []
+        self.max_capacity = max_capacity
+        self.max_weight = max_weight
     
-    def add_book(self, book):
+    def add_item(self, item):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        if len(self.items) >= self.max_capacity:
+            print("Инвентарь полон")
+            return False
+        if self.get_total_weight() + item.weight > self.max_weight:
+            print("Превышен максимальный вес инвентаря")
+            return False
+        self.items.append(item)
+        print(f"Предмет {item.name} добавлен в инвентарь")
+        return True
     
-    def remove_book(self, isbn):
+    def remove_item(self, item_name):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        for i, item in enumerate(self.items):
+            if item.name == item_name:
+                removed_item = self.items.pop(i)
+                print(f"Предмет {item_name} удален из инвентаря")
+                return removed_item
+        print(f"Предмет {item_name} не найден в инвентаре")
+        return None
     
-    def find_books_by_author(self, author):
+    def get_items_by_type(self, item_type):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        return [item for item in self.items if item.item_type == item_type]
     
-    def get_new_books(self):
+    def get_total_weight(self):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        return sum(item.weight for item in self.items)
+    
+    def get_total_value(self):
+        """Возвращает общую стоимость всех предметов в инвентаре"""
+        return sum(item.value for item in self.items)
 ```
 
-### Задание 3: Класс Car
+### Задание 3: Класс GameLocation
 
-Создайте класс `Car` с атрибутами: марка, модель, год выпуска, цвет, пробег.
+Создайте класс `GameLocation` с атрибутами: название, тип локации, уровень опасности, список NPC, список монстров.
 Реализуйте методы:
-- `start_engine()` - запускает двигатель
-- `drive(distance)` - увеличивает пробег
-- `paint(new_color)` - перекрашивает автомобиль
-- `get_age()` - возвращает возраст автомобиля
+- `enter_location(player)` - позволяет игроку войти в локацию
+- `spawn_monster()` - создает нового монстра в локации
+- `get_safe()` - снижает уровень опасности
+- `get_age()` - возвращает возраст локации
 
 ```python
-class Car:
+class GameLocation:
     """
-    Класс для представления автомобиля
+    Класс для представления игровой локации
     """
-    def __init__(self, make, model, year, color, mileage=0):
-        # ВАШ КОД ЗДЕСЬ
-        pass
+    location_types = ["town", "dungeon", "forest", "mountain", "castle", "cave"]
     
-    def start_engine(self):
+    def __init__(self, name, location_type, danger_level=1):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        if location_type not in GameLocation.location_types:
+            raise ValueError(f"Тип локации должен быть одним из: {GameLocation.location_types}")
+        if not 1 <= danger_level <= 10:
+            raise ValueError("Уровень опасности должен быть от 1 до 10")
+            
+        self.name = name
+        self.location_type = location_type
+        self.danger_level = danger_level
+        self.npcs = []
+        self.monsters = []
+        self.created_at = __import__('datetime').datetime.now()
     
-    def drive(self, distance):
+    def enter_location(self, player):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        print(f"{player.name} входит в {self.name} (уровень опасности: {self.danger_level})")
+        if self.danger_level > player.level:
+            print("Внимание! Уровень опасности выше вашего уровня!")
+        else:
+            print("Уровень опасности приемлем для вас.")
     
-    def paint(self, new_color):
+    def spawn_monster(self, monster_name, monster_health, monster_attack, monster_type="common"):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        from random import randint
+        monster = Monster(monster_name, monster_health, monster_attack, monster_type)
+        self.monsters.append(monster)
+        print(f"Появился {monster_name} в {self.name}!")
+        return monster
+    
+    def get_safe(self):
+        # ВАШ КОД ЗДЕСЬ
+        if self.danger_level > 1:
+            self.danger_level -= 1
+            print(f"Уровень опасности в {self.name} снижен до {self.danger_level}")
+        else:
+            print(f"{self.name} уже безопасен (минимальный уровень опасности)")
     
     def get_age(self):
         # ВАШ КОД ЗДЕСЬ
-        pass
+        import datetime
+        current_time = datetime.datetime.now()
+        age = current_time - self.created_at
+        return age.days
 
 # Тестирование
-car = Car("Toyota", "Camry", 2020, "Blue")
-print(f"Возраст автомобиля: {car.get_age()} лет")
-car.start_engine()
-car.drive(150)
-print(f"Новый пробег: {car.mileage}")
+location = GameLocation("Темный лес", "forest", 5)
+print(f"Возраст локации: {location.get_age()} дней")
+player = Player("Алекс", level=3)
+location.enter_location(player)
 ```
 
 ---
 
 ## 5. Дополнительные задания
 
-### Задание 4: Класс для управления задачами
+### Задание 4: Класс для управления квестами
 
-Создайте класс `TaskManager`, который позволяет:
-- Добавлять задачи с описанием и приоритетом
-- Отмечать задачи как выполненные
-- Получать список активных задач
-- Получать задачи по приоритету
+Создайте класс `QuestManager`, который позволяет:
+- Добавлять квесты с описанием и наградой
+- Отмечать квесты как выполненные
+- Получать список активных квестов
+- Получать квесты по сложности
 
-### Задание 5: Класс для математических вычислений
+### Задание 5: Класс для игровой экономики
 
-Создайте класс `Calculator`, который реализует основные математические операции и хранит историю вычислений.
+Создайте класс `EconomySystem`, который реализует основные экономические операции в игре и хранит историю транзакций.
 
 ---
 
 ## Контрольные вопросы:
-1. В чем разница между атрибутами класса и атрибутами экземпляра?
-2. Какие уровни доступа к атрибутам существуют в Python?
-3. Что такое конструктор и деструктор в Python?
-4. Как использовать property в Python?
-5. В чем преимущество инкапсуляции?
+1. В чем разница между атрибутами класса и атрибутами экземпляра в игровом контексте?
+2. Какие уровни доступа к атрибутам существуют в Python и как они применяются в играх?
+3. Что такое конструктор и деструктор в Python и как они используются в игровых объектах?
+4. Как использовать property в игровых классах для контроля параметров?
+5. В чем преимущество инкапсуляции в игровых системах?
