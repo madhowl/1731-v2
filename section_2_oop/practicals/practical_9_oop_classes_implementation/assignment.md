@@ -20,6 +20,529 @@
 6. Практические задания в игровом контексте
 
 ---
+# Практическое занятие 9: ООП - реализация классов
+
+## Создание классов игровых сущностей, атрибуты, методы, конструкторы
+
+### Цель занятия:
+Научиться создавать классы в Python, определять атрибуты и методы, использовать конструкторы и деструкторы на примере игровых сущностей.
+
+### Задачи:
+1. Создать классы игровых сущностей с атрибутами и методами
+2. Использовать конструкторы и деструкторы
+3. Реализовать инкапсуляцию
+4. Применить принципы ООП на практике в игровом контексте
+
+---
+
+## 1. Теоретическая часть
+
+### Основные понятия ООП
+
+**Класс** — это шаблон для создания объектов, определяющий набор атрибутов и методов, которые будут иметь объекты этого класса. 
+
+**Объект** — это экземпляр класса, созданный по шаблону класса. У каждого объекта есть свои значения атрибутов, но общая структура и поведение определяются классом.
+
+**Атрибут** — это переменная, принадлежащая объекту или классу. 
+- Атрибуты экземпляра — уникальны для каждого объекта
+- Атрибуты класса — общие для всех объектов класса
+
+**Метод** — это функция, принадлежащая объекту и определяющая действия, которые можно выполнять с объектом.
+
+**Конструктор** — специальный метод `__init__`, который вызывается при создании нового объекта и используется для инициализации атрибутов.
+
+### Пример простого класса (уровень 1 - начальный)
+
+```python
+class GameCharacter:
+    """
+    Класс для представления игрового персонажа
+    """
+    def __init__(self, name, health, attack_power, character_class="warrior"):
+        """
+        Конструктор класса GameCharacter
+        Создает новый объект персонажа с заданными характеристиками
+        """
+        # Атрибуты экземпляра - уникальны для каждого персонажа
+        self.name = name  # Имя персонажа
+        self.health = health  # Текущее здоровье
+        self.max_health = health  # Максимальное здоровье
+        self.attack_power = attack_power  # Сила атаки
+        self.character_class = character_class  # Класс персонажа
+        self.level = 1  # Уровень персонажа (по умолчанию 1)
+        self.experience = 0  # Опыт (по умолчанию 0)
+        self.inventory = []  # Список вещей в инвентаре (пустой)
+        print(f"Создан новый персонаж: {self.name}")
+
+    def introduce(self):
+        """
+        Метод, который позволяет персонажу представиться
+        """
+        return f"Привет, я {self.name}, {self.character_class} {self.level} уровня"
+
+    def is_alive(self):
+        """
+        Метод проверяет, жив ли персонаж (здоровье больше 0)
+        """
+        return self.health > 0
+
+    def take_damage(self, damage):
+        """
+        Метод, который позволяет персонажу получить урон
+        """
+        # Здоровье не может быть меньше 0
+        self.health = max(0, self.health - damage)
+        print(f"{self.name} получил {damage} урона. Осталось здоровья: {self.health}")
+        return damage
+
+    def heal(self, amount):
+        """
+        Метод, который позволяет персонажу восстановить здоровье
+        """
+        old_health = self.health
+        # Здоровье не может превышать максимальное значение
+        self.health = min(self.max_health, self.health + amount)
+        healed_amount = self.health - old_health
+        print(f"{self.name} восстановил {healed_amount} здоровья. Текущее здоровье: {self.health}")
+        return healed_amount
+
+# Создание экземпляра класса
+hero = GameCharacter("Артур", 100, 20, "warrior")
+print(hero.introduce())  # Привет, я Артур, warrior 1 уровня
+print(f"Жив: {hero.is_alive()}")  # Жив: True
+```
+
+---
+
+## 2. Практические задания
+
+### Уровень 1 - Начальный
+
+#### Задание 1.1: Создание класса игрового монстра
+
+Создайте класс `Monster` для представления игрового монстра с атрибутами: имя, здоровье, сила атаки, тип монстра. Реализуйте метод `get_info()`, который выводит информацию о монстре.
+
+**Шаги выполнения:**
+1. Создайте класс `Monster` с конструктором `__init__`
+2. Добавьте атрибуты: `name`, `health`, `attack_power`, `monster_type`
+3. Добавьте метод `get_info()`, который возвращает строку с информацией о монстре
+4. Создайте экземпляр класса и вызовите метод `get_info()`
+
+```python
+class Monster:
+    def __init__(self, name, health, attack_power, monster_type="common"):
+        # ВАШ КОД ЗДЕСЬ - добавьте атрибуты
+        pass  # Замените на ваш код
+
+    def get_info(self):
+        # ВАШ КОД ЗДЕСЬ - верните строку с информацией о монстре
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# goblin = Monster("Гоблин", 30, 8, "common")
+# print(goblin.get_info())  # Должно вывести: "Гоблин" - обычный монстр (здоровье: 30, атака: 8)
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class Monster:
+    def __init__(self, name, health, attack_power, monster_type="common"):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack_power = attack_power
+        self.monster_type = monster_type
+
+    def get_info(self):
+        return f'"{self.name}" - {self.monster_type} монстр (здоровье: {self.health}, атака: {self.attack_power})'
+```
+
+</details>
+
+#### Задание 1.2: Класс игрового предмета
+
+Создайте класс `GameItem` с атрибутами: имя, тип предмета, стоимость. Реализуйте методы: `use_on(character)` для использования предмета на персонаже и `get_description()` для получения описания предмета.
+
+```python
+class GameItem:
+    def __init__(self, name, item_type, value=0):
+        # ВАШ КОД ЗДЕСЬ - добавьте атрибуты
+        pass  # Замените на ваш код
+
+    def use_on(self, character):
+        # ВАШ КОД ЗДЕСЬ - использование предмета на персонаже
+        pass  # Замените на ваш код
+
+    def get_description(self):
+        # ВАШ КОД ЗДЕСЬ - получение описания предмета
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# health_potion = GameItem("Зелье здоровья", "potion", 25)
+# print(health_potion.get_description())  # Должно вывести описание предмета
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class GameItem:
+    def __init__(self, name, item_type, value=0):
+        self.name = name
+        self.item_type = item_type
+        self.value = value
+
+    def use_on(self, character):
+        if self.item_type == "potion" and "здоровье" in self.name.lower():
+            # Простое восстановление здоровья на 20 единиц
+            old_health = character.health
+            character.health = min(character.max_health, character.health + 20)
+            healed = character.health - old_health
+            print(f"{character.name} восстановил {healed} здоровья с помощью {self.name}")
+            return healed
+        else:
+            print(f"Предмет {self.name} не может быть использован таким образом")
+            return 0
+
+    def get_description(self):
+        return f"{self.name} - {self.item_type}, стоимость: {self.value} золота"
+```
+
+</details>
+
+
+### Уровень 2 - Средний
+
+#### Задание 2.1: Класс игрового магазина
+
+Создайте класс игрового магазина с атрибутами: название, список товаров, владелец. Реализуйте методы: `add_item(item)` для добавления товара, `sell_item(item_name, buyer)` для продажи товара покупателю, `show_inventory()` для отображения ассортимента. Добавьте проверку, что товар существует перед продажей.
+
+**Шаги выполнения:**
+1. Создайте класс `Shop` с конструктором
+2. Добавьте атрибуты: `name`, `owner`, `items` (список товаров)
+3. Реализуйте метод `add_item(item)` для добавления товара в магазин
+4. Реализуйте метод `sell_item(item_name, buyer)` с проверкой наличия товара
+5. Реализуйте метод `show_inventory()` для отображения всех товаров
+6. Добавьте проверки корректности операций
+
+```python
+class Shop:
+    def __init__(self, name, owner):
+        # ВАШ КОД ЗДЕСЬ - инициализация атрибутов
+        pass  # Замените на ваш код
+
+    def add_item(self, item):
+        # ВАШ КОД ЗДЕСЬ - добавление товара в магазин
+        pass  # Замените на ваш код
+
+    def sell_item(self, item_name, buyer):
+        # ВАШ КОД ЗДЕСЬ - продажа товара покупателю с проверкой
+        pass  # Замените на ваш код
+
+    def show_inventory(self):
+        # ВАШ КОД ЗДЕСЬ - отображение ассортимента магазина
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# shop = Shop("Лавка Алхимика", "Альберт")
+# health_potion = GameItem("Зелье здоровья", "potion", 25)
+# shop.add_item(health_potion)
+# shop.show_inventory()  # Должно показать список товаров
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class Shop:
+    def __init__(self, name, owner):
+        self.name = name
+        self.owner = owner
+        self.items = []  # Список товаров в магазине
+
+    def add_item(self, item):
+        self.items.append(item)
+        print(f"Предмет {item.name} добавлен в {self.name}")
+
+    def sell_item(self, item_name, buyer):
+        # Поиск товара по имени
+        for i, item in enumerate(self.items):
+            if item.name.lower() == item_name.lower():
+                # Удаляем товар из магазина
+                sold_item = self.items.pop(i)
+                print(f"{buyer.name} купил {sold_item.name} за {sold_item.value} золота")
+                return sold_item
+        
+        print(f"Предмет {item_name} не найден в {self.name}")
+        return None
+
+    def show_inventory(self):
+        if not self.items:
+            print(f"{self.name} пустой")
+        else:
+            print(f"Ассортимент {self.name}:")
+            for item in self.items:
+                print(f"- {item.get_description()}")
+```
+
+</details>
+
+#### Задание 2.2: Улучшенный класс GameCharacter
+
+Улучшите класс `GameCharacter` из примера выше, добавив возможность получения опыта и повышения уровня, а также метод для проверки возможности атаковать другого персонажа.
+
+```python
+class GameCharacter:
+    # Атрибуты класса - общие для всех персонажей
+    character_classes = ["warrior", "mage", "archer", "rogue"]
+    
+    def __init__(self, name, health, attack_power, character_class="warrior"):
+        # Атрибуты экземпляра
+        self.name = name  # Имя персонажа
+        self.health = health  # Текущее здоровье
+        self.max_health = health  # Максимальное здоровье
+        self.attack_power = attack_power  # Сила атаки
+        self.character_class = character_class if character_class in GameCharacter.character_classes else "warrior"
+        self.level = 1  # Уровень персонажа
+        self.experience = 0  # Текущий опыт
+        self.exp_for_next_level = 100  # Опыт, необходимый для следующего уровня
+        self.inventory = []  # Инвентарь персонажа
+
+    def attack(self, target):
+        # ВАШ КОД ЗДЕСЬ - атака на другого персонажа
+        pass  # Замените на ваш код
+
+    def can_attack(self, target):
+        # ВАШ КОД ЗДЕСЬ - проверка возможности атаковать цель
+        pass # Замените на ваш код
+
+    def gain_experience(self, exp_amount):
+        # ВАШ КОД ЗДЕСЬ - получение опыта и повышение уровня при необходимости
+        pass  # Замените на ваш код
+
+    def level_up(self):
+        # ВАШ КОД ЗДЕСЬ - повышение уровня персонажа
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# hero = GameCharacter("Артур", 100, 20, "warrior")
+# enemy = GameCharacter("Гоблин", 50, 10, "common")
+# print(f"Может ли атаковать: {hero.can_attack(enemy)}")
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class GameCharacter:
+    # Атрибуты класса - общие для всех персонажей
+    character_classes = ["warrior", "mage", "archer", "rogue"]
+    
+    def __init__(self, name, health, attack_power, character_class="warrior"):
+        # Атрибуты экземпляра
+        self.name = name  # Имя персонажа
+        self.health = health  # Текущее здоровье
+        self.max_health = health  # Максимальное здоровье
+        self.attack_power = attack_power  # Сила атаки
+        self.character_class = character_class if character_class in GameCharacter.character_classes else "warrior"
+        self.level = 1  # Уровень персонажа
+        self.experience = 0  # Текущий опыт
+        self.exp_for_next_level = 100  # Опыт, необходимый для следующего уровня
+        self.inventory = []  # Инвентарь персонажа
+
+    def attack(self, target):
+        """Атакует другого персонажа"""
+        if self.can_attack(target):
+            damage_dealt = target.take_damage(self.attack_power)
+            print(f"{self.name} атакует {target.name} и наносит {damage_dealt} урона")
+            # Даём немного опыта за успешную атаку
+            self.gain_experience(5)
+            return damage_dealt
+        else:
+            print(f"{self.name} не может атаковать {target.name}")
+            return 0
+
+    def can_attack(self, target):
+        """Проверяет, может ли персонаж атаковать цель"""
+        return self.is_alive() and target.is_alive() and self != target
+
+    def gain_experience(self, exp_amount):
+        """Получает опыт и повышает уровень при необходимости"""
+        self.experience += exp_amount
+        print(f"{self.name} получил {exp_amount} опыта. Всего: {self.experience}/{self.exp_for_next_level}")
+        
+        # Проверяем, нужно ли повысить уровень
+        while self.experience >= self.exp_for_next_level:
+            self.level_up()
+
+    def level_up(self):
+        """Повышает уровень персонажа"""
+        self.level += 1
+        self.max_health += 20  # Увеличиваем максимальное здоровье
+        self.health = self.max_health  # Полностью восстанавливаем здоровье
+        self.attack_power += 5  # Увеличиваем силу атаки
+        self.exp_for_next_level = int(self.exp_for_next_level * 1.5)  # Увеличиваем требуемый опыт
+        print(f"{self.name} достиг {self.level} уровня!")
+
+    def take_damage(self, damage):
+        """Получает урон"""
+        self.health = max(0, self.health - damage)
+        return damage
+
+    def is_alive(self):
+        """Проверяет, жив ли персонаж"""
+        return self.health > 0
+```
+
+</details>
+
+
+### Уровень 3 - Повышенный
+
+#### Задание 3.1: Система квестов в игре
+
+Создайте систему квестов в игре, состоящую из классов `Quest`, `QuestGiver` и `QuestSystem`. Реализуйте возможность получения квестов, отслеживания прогресса и завершения квестов. Убедитесь, что квест нельзя завершить, если он еще не принят или не выполнен полностью.
+
+**Шаги выполнения:**
+1. Создайте класс `Quest` с атрибутами: название, описание, награда, цель (например, убить 5 монстров)
+2. Создайте класс `QuestGiver` с атрибутами: имя, список доступных квестов, список активных квестов у игрока
+3. Создайте класс `QuestSystem` с методами: выдача квеста, отслеживание прогресса, завершение квеста
+4. Добавьте проверки корректности операций
+
+```python
+class Quest:
+    def __init__(self, name, description, reward, target_count=1, target_type="default"):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+class QuestGiver:
+    def __init__(self, name):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+    def give_quest(self, quest, player):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+    def complete_quest(self, quest_name, player):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+class QuestSystem:
+    def __init__(self):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+    def track_progress(self, quest, target_type, target_count=1):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+    def finish_quest(self, quest, player):
+        # ВАШ КОД ЗДЕСЬ
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# quest_system = QuestSystem()
+# blacksmith = QuestGiver("Кузнец Гром")
+# kill_quest = Quest("Истребитель гоблинов", "Убейте 3 гоблина", 50, 3, "kill_monster")
+# print(f"Квест: {kill_quest.name}, Награда: {kill_quest.reward} золота")
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class Quest:
+    def __init__(self, name, description, reward, target_count=1, target_type="default"):
+        self.name = name
+        self.description = description
+        self.reward = reward
+        self.target_count = target_count
+        self.target_type = target_type
+        self.current_progress = 0  # Текущий прогресс выполнения квеста
+        self.completed = False  # Статус выполнения квеста
+        self.accepted = False  # Принят ли квест игроком
+
+    def update_progress(self, amount=1):
+        """Обновляет прогресс выполнения квеста"""
+        if not self.completed and self.accepted:
+            self.current_progress = min(self.target_count, self.current_progress + amount)
+            if self.current_progress >= self.target_count:
+                self.completed = True
+                print(f"Квест '{self.name}' выполнен!")
+
+    def get_status(self):
+        """Возвращает строку со статусом квеста"""
+        if not self.accepted:
+            return "Не принят"
+        elif self.completed:
+            return "Выполнен"
+        else:
+            return f"В процессе: {self.current_progress}/{self.target_count}"
+
+class QuestGiver:
+    def __init__(self, name):
+        self.name = name
+        self.available_quests = []  # Список доступных квестов
+        self.active_quests = {}  # Активные квесты у игроков: {player_id: [quests]}
+
+    def add_quest(self, quest):
+        """Добавляет квест в список доступных"""
+        self.available_quests.append(quest)
+
+    def give_quest(self, quest_name, player):
+        """Выдает квест игроку"""
+        for quest in self.available_quests:
+            if quest.name.lower() == quest_name.lower() and not quest.accepted:
+                quest.accepted = True
+                if player.name not in self.active_quests:
+                    self.active_quests[player.name] = []
+                self.active_quests[player.name].append(quest)
+                print(f"{player.name} принял квест: {quest.name}")
+                return quest
+        print(f"Квест '{quest_name}' недоступен для {player.name}")
+        return None
+
+    def complete_quest(self, quest_name, player):
+        """Завершает квест для игрока"""
+        if player.name in self.active_quests:
+            for quest in self.active_quests[player.name]:
+                if quest.name.lower() == quest_name.lower() and quest.completed:
+                    # Выдаем награду игроку (в реальной игре это может быть добавление золота и т.п.)
+                    print(f"{player.name} завершил квест '{quest.name}' и получил {quest.reward} золота!")
+                    self.active_quests[player.name].remove(quest)
+                    return True
+        print(f"Невозможно завершить квест '{quest_name}' для {player.name}")
+        return False
+
+class QuestSystem:
+    def __init__(self):
+        self.all_quests = []  # Все квесты в игре
+        self.completed_quests = set()  # Уже выполненные квесты (чтобы не повторялись)
+
+    def track_progress(self, quest, target_type, target_count=1):
+        """Отслеживает прогресс выполнения квеста"""
+        if quest.target_type == target_type:
+            quest.update_progress(target_count)
+
+    def finish_quest(self, quest, player):
+        """Завершает квест для игрока"""
+        if quest.completed:
+            # В реальной игре здесь происходило бы начисление награды
+            player.gain_experience(quest.reward)  # В качестве примера - опыт как награда
+            print(f"Квест '{quest.name}' успешно завершен игроком {player.name}!")
+            return True
+        else:
+            print(f"Квест '{quest.name}' еще не выполнен!")
+            return False
+```
+
+</details>
+
+---
+
 
 ## 1. Создание простого класса игровой сущности
 

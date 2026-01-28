@@ -1,11 +1,14 @@
-# Упражнения для практического задания 9: ООП - реализация классов
+# Решения для практического задания 9: ООП - реализация классов
 
-# Ниже приведены игровые классы, которые необходимо реализовать согласно заданию
+# Ниже приведены игровые классы, которые реализованы согласно заданию
 
 class GameCharacter:
     """
     Класс для представления игрового персонажа
     """
+    # Атрибуты класса - общие для всех персонажей
+    character_classes = ["warrior", "mage", "archer", "rogue"]
+    
     def __init__(self, name, health, attack_power, character_class="warrior"):
         """
         Конструктор класса GameCharacter
@@ -16,9 +19,10 @@ class GameCharacter:
         self.health = health  # Текущее здоровье
         self.max_health = health  # Максимальное здоровье
         self.attack_power = attack_power  # Сила атаки
-        self.character_class = character_class  # Класс персонажа
+        self.character_class = character_class if character_class in GameCharacter.character_classes else "warrior"
         self.level = 1  # Уровень персонажа (по умолчанию 1)
         self.experience = 0  # Опыт (по умолчанию 0)
+        self.exp_for_next_level = 100  # Опыт, необходимый для следующего уровня
         self.inventory = []  # Список вещей в инвентаре (пустой)
         print(f"Создан новый персонаж: {self.name}")
 
@@ -54,14 +58,61 @@ class GameCharacter:
         print(f"{self.name} восстановил {healed_amount} здоровья. Текущее здоровье: {self.health}")
         return healed_amount
 
+    def attack(self, target):
+        """Атакует другого персонажа"""
+        if self.can_attack(target):
+            damage_dealt = target.take_damage(self.attack_power)
+            print(f"{self.name} атакует {target.name} и наносит {damage_dealt} урона")
+            # Даём немного опыта за успешную атаку
+            self.gain_experience(5)
+            return damage_dealt
+        else:
+            print(f"{self.name} не может атаковать {target.name}")
+            return 0
+
+    def can_attack(self, target):
+        """Проверяет, может ли персонаж атаковать цель"""
+        return self.is_alive() and target.is_alive() and self != target
+
+    def gain_experience(self, exp_amount):
+        """Получает опыт и повышает уровень при необходимости"""
+        self.experience += exp_amount
+        print(f"{self.name} получил {exp_amount} опыта. Всего: {self.experience}/{self.exp_for_next_level}")
+        
+        # Проверяем, нужно ли повысить уровень
+        while self.experience >= self.exp_for_next_level:
+            self.level_up()
+
+    def level_up(self):
+        """Повышает уровень персонажа"""
+        self.level += 1
+        self.max_health += 20  # Увеличиваем максимальное здоровье
+        self.health = self.max_health  # Полностью восстанавливаем здоровье
+        self.attack_power += 5  # Увеличиваем силу атаки
+        self.exp_for_next_level = int(self.exp_for_next_level * 1.5)  # Увеличиваем требуемый опыт
+        print(f"{self.name} достиг {self.level} уровня!")
+
+    def __str__(self):
+        """Строковое представление объекта"""
+        return f"GameCharacter(name='{self.name}', class='{self.character_class}', level={self.level}, health={self.health}/{self.max_health})"
+
 
 class Monster:
+    """
+    Класс для представления игрового монстра
+    """
+    # Атрибут класса - общий для всех монстров
+    total_killed = 0
+    common_loot_table = ["gold_coin", "health_potion_minor"]
+    
     def __init__(self, name, health, attack_power, monster_type="common"):
         self.name = name
         self.health = health
         self.max_health = health
         self.attack_power = attack_power
         self.monster_type = monster_type
+        self.alive = True
+        self.loot = []  # Атрибут экземпляра
 
     def get_info(self):
         return f'"{self.name}" - {self.monster_type} монстр (здоровье: {self.health}, атака: {self.attack_power})'
@@ -71,14 +122,77 @@ class Monster:
 
     def take_damage(self, damage):
         self.health = max(0, self.health - damage)
+        if self.health <= 0:
+            self.health = 0
+            self.alive = False
+            Monster.total_killed += 1  # Увеличиваем счетчик класса
+            self.drop_loot()
         return damage
+
+    def drop_loot(self):
+        """Выбросить лут при смерти"""
+        import random
+        self.loot = Monster.common_loot_table.copy()
+        if self.monster_type == "rare":
+            self.loot.append("rare_item")
+        elif self.monster_type == "boss":
+            self.loot.extend(["legendary_item", "large_gold_pile"])
+        print(f"{self.name} выбросил: {', '.join(self.loot)}")
+
+    @classmethod
+    def get_total_killed(cls):
+        """Метод класса для получения общего количества убитых монстров"""
+        return cls.total_killed
+
+    @staticmethod
+    def is_difficult_monster(monster_type):
+        """Статический метод для проверки типа монстра"""
+        return monster_type in ["rare", "boss"]
+
+    def __str__(self):
+        return f"Monster(name='{self.name}', type='{self.monster_type}', health={self.health}/{self.max_health})"
 
 
 class GameItem:
-    def __init__(self, name, item_type, value=0):
-        self.name = name
-        self.item_type = item_type
+    """
+    Класс игрового предмета
+    """
+    item_types = ["weapon", "armor", "potion", "quest_item"]  # Атрибут класса
+    
+    def __init__(self, name, item_type, value=0, weight=1.0, durability=100):
+        """
+        Конструктор игрового предмета
+        
+        Args:
+            name (str): Название предмета
+            item_type (str): Тип предмета
+            value (int): Стоимость предмета
+            weight (float): Вес предмета
+            durability (int): Прочность предмета
+        """
+        self.name = name  # Атрибут экземпляра
+        self.item_type = item_type if item_type in GameItem.item_types else "misc"
         self.value = value
+        self.weight = weight
+        self.durability = durability
+        self._effects = {}  # Защищенный атрибут (инкапсуляция)
+        self.created_at = __import__('datetime').datetime.now()
+
+    def add_effect(self, effect_name, effect_value):
+        """
+        Добавить эффект к предмету
+        
+        Args:
+            effect_name (str): Название эффекта
+            effect_value (any): Значение эффекта
+        """
+        self._effects[effect_name] = effect_value
+
+    def get_effects(self):
+        """
+        Получить все эффекты предмета
+        """
+        return self._effects.copy()
 
     def use_on(self, character):
         if self.item_type == "potion" and "здоровье" in self.name.lower():
@@ -88,12 +202,23 @@ class GameItem:
             healed = character.health - old_health
             print(f"{character.name} восстановил {healed} здоровья с помощью {self.name}")
             return healed
-        else:
-            print(f"Предмет {self.name} не может быть использован таким образом")
-            return 0
+        elif self.item_type == "weapon":
+            if "damage" in self._effects:
+                character.attack_power += self._effects["damage"]
+                print(f"{character.name} получил бонус к атаке +{self._effects['damage']} от {self.name}")
+        return 0
 
     def get_description(self):
         return f"{self.name} - {self.item_type}, стоимость: {self.value} золота"
+
+    def __del__(self):
+        """
+        Деструктор класса
+        """
+        print(f"Предмет {self.name} удален из игры...")
+
+    def __str__(self):
+        return f"GameItem(name='{self.name}', type='{self.item_type}', value={self.value})"
 
 
 class Shop:
@@ -126,6 +251,9 @@ class Shop:
             for item in self.items:
                 print(f"- {item.get_description()}")
 
+    def __str__(self):
+        return f"Shop(name='{self.name}', owner='{self.owner}', items_count={len(self.items)})"
+
 
 class Quest:
     def __init__(self, name, description, reward, target_count=1, target_type="default"):
@@ -154,6 +282,9 @@ class Quest:
             return "Выполнен"
         else:
             return f"В процессе: {self.current_progress}/{self.target_count}"
+
+    def __str__(self):
+        return f"Quest(name='{self.name}', reward={self.reward}, status={self.get_status()})"
 
 
 class QuestGiver:
@@ -191,6 +322,9 @@ class QuestGiver:
         print(f"Невозможно завершить квест '{quest_name}' для {player.name}")
         return False
 
+    def __str__(self):
+        return f"QuestGiver(name='{self.name}', quests_count={len(self.available_quests)})"
+
 
 class QuestSystem:
     def __init__(self):
@@ -212,6 +346,9 @@ class QuestSystem:
         else:
             print(f"Квест '{quest.name}' еще не выполнен!")
             return False
+
+    def __str__(self):
+        return f"QuestSystem(quests_count={len(self.all_quests)}, completed_count={len(self.completed_quests)})"
 
 
 class Weapon:
@@ -250,6 +387,9 @@ class Weapon:
     def get_damage(self):
         """Возвращает текущий урон с учетом уровня улучшения"""
         return self.base_damage * (1 + self.upgrade_level * 0.1)
+
+    def __str__(self):
+        return f"Weapon(name='{self.name}', type='{self.weapon_type}', damage={self.get_damage():.1f})"
 
 
 class Inventory:
@@ -290,6 +430,9 @@ class Inventory:
     def get_total_value(self):
         """Возвращает общую стоимость всех предметов в инвентаре"""
         return sum(item.value for item in self.items)
+
+    def __str__(self):
+        return f"Inventory(items_count={len(self.items)}, total_weight={self.get_total_weight()}, total_value={self.get_total_value()})"
 
 
 class GameLocation:
@@ -337,3 +480,85 @@ class GameLocation:
         current_time = datetime.datetime.now()
         age = current_time - self.created_at
         return age.days
+
+    def __str__(self):
+        return f"GameLocation(name='{self.name}', type='{self.location_type}', danger_level={self.danger_level})"
+
+
+# Примеры использования классов
+if __name__ == "__main__":
+    print("=== Примеры использования игровых классов ===\n")
+    
+    # Пример использования класса GameCharacter
+    print("--- Класс GameCharacter ---")
+    hero = GameCharacter("Артур", 100, 20, "warrior")
+    print(hero.introduce())
+    print(f"Жив: {hero.is_alive()}")
+    print(str(hero))
+    print()
+    
+    # Пример использования класса Monster
+    print("--- Класс Monster ---")
+    goblin = Monster("Гоблин", 30, 8, "common")
+    print(goblin.get_info())
+    print(f"Жив: {goblin.is_alive()}")
+    print(str(goblin))
+    print()
+    
+    # Пример использования класса GameItem
+    print("--- Класс GameItem ---")
+    health_potion = GameItem("Зелье здоровья", "potion", 25, 0.5, 1)
+    health_potion.add_effect("heal", 30)
+    print(f"Тип предмета: {health_potion.item_type}")
+    print(f"Эффекты: {health_potion.get_effects()}")
+    print(health_potion.get_description())
+    print(str(health_potion))
+    print()
+    
+    # Пример использования класса Shop
+    print("--- Класс Shop ---")
+    shop = Shop("Лавка Алхимика", "Альберт")
+    shop.add_item(health_potion)
+    shop.show_inventory()
+    print(str(shop))
+    print()
+    
+    # Пример использования класса Weapon
+    print("--- Класс Weapon ---")
+    sword = Weapon("Меч героя", "melee", 25, 100, "rare")
+    print(sword.get_info())
+    print(f"Пригодно к использованию: {sword.is_usable()}")
+    print(str(sword))
+    print()
+    
+    # Пример использования класса GameLocation
+    print("--- Класс GameLocation ---")
+    forest = GameLocation("Темный лес", "forest", 5)
+    print(f"Возраст локации: {forest.get_age()} дней")
+    forest.enter_location(hero)
+    print(str(forest))
+    print()
+    
+    # Пример использования системы квестов
+    print("--- Система квестов ---")
+    quest_system = QuestSystem()
+    blacksmith = QuestGiver("Кузнец Гром")
+    kill_quest = Quest("Истребитель гоблинов", "Убейте 3 гоблина", 50, 3, "kill_monster")
+    blacksmith.add_quest(kill_quest)
+    print(f"Квест: {kill_quest.name}, Награда: {kill_quest.reward} золота")
+    print(f"Статус: {kill_quest.get_status()}")
+    print(str(kill_quest))
+    print(str(blacksmith))
+    print(str(quest_system))
+    print()
+    
+    # Пример использования инвентаря
+    print("--- Класс Inventory ---")
+    inventory = Inventory(max_capacity=5, max_weight=50)
+    inventory.add_item(health_potion)
+    print(f"Общий вес инвентаря: {inventory.get_total_weight()}")
+    print(f"Общая стоимость: {inventory.get_total_value()}")
+    print(str(inventory))
+    print()
+    
+    print("Все игровые классы успешно реализованы и готовы к использованию!")

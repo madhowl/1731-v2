@@ -1,20 +1,62 @@
 # Практическое занятие 13: ООП - паттерн Singleton в игровом контексте
 
-## Цель занятия
+## Создание классов с паттерном Singleton для управления игровыми системами
+
+### Цель занятия:
 Изучить паттерн проектирования Singleton и научиться реализовывать его в Python различными способами в контексте игровых приложений, а также понять, когда и зачем его использовать в игровой разработке.
 
-## Задачи
+### Задачи:
+1. Создать классы с паттерном Singleton для управления игровыми системами
+2. Реализовать различные способы реализации Singleton (через `__new__`, метаклассы, декораторы)
+3. Применить принципы ООП и паттерны проектирования в игровом контексте
+4. Обеспечить потокобезопасность при необходимости в многопоточных играх
 
-### Задача 1: Базовая реализация Singleton для игрового менеджера (20 баллов)
-Создайте класс `GameManager` с использованием паттерна Singleton:
-- Реализуйте метод `__new__` для обеспечения единственности экземпляра
-- Добавьте метод `start_game()` для инициализации игровой сессии
-- Добавьте метод `end_game()` для завершения игровой сессии
+### План работы:
+1. Создание базового Singleton класса
+2. Реализация потокобезопасного Singleton
+3. Использование метаклассов для создания Singleton
+4. Применение декораторов для реализации Singleton
+5. Практические задания в игровом контексте
+
+---
+# Практическое занятие 13: ООП - паттерн Singleton в игровом контексте
+
+## Создание классов с паттерном Singleton для управления игровыми системами
+
+### Цель занятия:
+Изучить паттерн проектирования Singleton и научиться реализовывать его в Python различными способами в контексте игровых приложений, а также понять, когда и зачем его использовать в игровой разработке.
+
+### Задачи:
+1. Создать классы с паттерном Singleton для управления игровыми системами
+2. Реализовать различные способы реализации Singleton (через `__new__`, метаклассы, декораторы)
+3. Применить принципы ООП и паттерны проектирования в игровом контексте
+4. Обеспечить потокобезопасность при необходимости в многопоточных играх
+
+---
+
+## 1. Теоретическая часть
+
+### Основные понятия паттерна Singleton
+
+**Паттерн Singleton** — это порождающий паттерн проектирования, который гарантирует, что у класса есть только один экземпляр, и предоставляет глобальную точку доступа к этому экземпляру. В игровой разработке Singleton часто используется для классов, которые должны быть уникальными в игре: менеджеры ресурсов, менеджеры сохранений, менеджеры аудио, логгеры и т.д.
+
+**Преимущества Singleton:**
+- Гарантированно один экземпляр класса
+- Глобальная точка доступа
+- Контролируемое владение объектом
+
+**Недостатки Singleton:**
+- Нарушение принципа единственной ответственности
+- Сложности с тестированием
+- Возможные проблемы с многопоточностью
+- Скрывает зависимости
+
+### Пример базовой реализации Singleton (уровень 1 - начальный)
 
 ```python
 class GameManager:
     """
-    Менеджер игры -.Singleton для управления игровой сессией
+    Менеджер игры - Singleton для управления игровой сессией
     """
     _instance = None
 
@@ -60,18 +102,257 @@ game2.add_score(100)  # Обратите внимание, что использ
 print(game1.get_instance_info())
 ```
 
-### Задача 2: Потокобезопасная реализация игрового менеджера (20 баллов)
-Реализуйте потокобезопасный Singleton `ResourceManager` с использованием:
-- Блокировок (Lock) для предотвращения создания нескольких экземпляров в многопоточной среде
-- Метода `get_instance()` для получения экземпляра класса
+---
+
+## 2. Практические задания
+
+### Уровень 1 - Начальный
+
+#### Задание 1.1: Базовая реализация менеджера ресурсов
+
+Создайте класс `ResourceManager` как Singleton для управления игровыми ресурсами (текстуры, модели, звуки). Реализуйте методы для загрузки, получения и выгрузки ресурсов. Используйте `__new__` для обеспечения единственности экземпляра.
+
+**Шаги выполнения:**
+1. Создайте класс `ResourceManager` с атрибутом `_instance` для хранения единственного экземпляра
+2. Реализуйте метод `__new__` для создания единственного экземпляра
+3. Добавьте атрибут `resources` (словарь) для хранения загруженных ресурсов
+4. Реализуйте метод `load_resource(name, path)` для загрузки ресурса
+5. Реализуйте метод `get_resource(name)` для получения ресурса
+6. Реализуйте метод `unload_resource(name)` для выгрузки ресурса
+7. Создайте экземпляры класса и протестируйте его работу
+
+```python
+class ResourceManager:
+    # ВАШ КОД ЗДЕСЬ - реализуйте Singleton через __new__
+    pass  # Замените на ваш код
+
+    def load_resource(self, resource_name, resource_path):
+        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку ресурса
+        pass  # Замените на ваш код
+
+    def get_resource(self, resource_name):
+        # ВАШ КОД ЗДЕСЯ - реализуйте получение ресурса
+        pass  # Замените на ваш код
+
+    def unload_resource(self, resource_name):
+        # ВАШ КОД ЗДЕСЯ - реализуйте выгрузку ресурса
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# rm1 = ResourceManager()
+# rm2 = ResourceManager()
+# print(f"Одинаковые экземпляры: {rm1 is rm2}")  # Должно быть True
+# rm1.load_resource("background", "/assets/background.png")
+# resource = rm2.get_resource("background")  # Обратите внимание, что используем rm2
+# print(f"Ресурс получен: {resource is not None}")
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class ResourceManager:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.resources = {}  # Хранилище ресурсов
+            cls._instance.loading_queue = []  # Очередь загрузки
+        return cls._instance
+
+    def load_resource(self, resource_name, resource_path):
+        """Загрузка ресурса в кэш"""
+        if resource_name not in self.resources:
+            print(f"Загружаем ресурс: {resource_name} из {resource_path}")
+            # Здесь могла бы быть реальная логика загрузки файла
+            self.resources[resource_name] = f"Данные ресурса {resource_name}"
+            print(f"Ресурс {resource_name} успешно загружен")
+        else:
+            print(f"Ресурс {resource_name} уже загружен")
+
+    def get_resource(self, resource_name):
+        """Получение ресурса из кэша"""
+        return self.resources.get(resource_name, None)
+
+    def unload_resource(self, resource_name):
+        """Выгрузка ресурса из кэша"""
+        if resource_name in self.resources:
+            del self.resources[resource_name]
+            print(f"Ресурс {resource_name} выгружен")
+        else:
+            print(f"Ресурс {resource_name} не найден в кэше")
+
+    def get_loaded_resources_count(self):
+        """Получить количество загруженных ресурсов"""
+        return len(self.resources)
+
+# Пример использования
+rm1 = ResourceManager()
+rm2 = ResourceManager()
+
+print(f"Одинаковые экземпляры: {rm1 is rm2}")  # Должно быть True
+
+rm1.load_resource("background", "/assets/background.png")
+resource = rm2.get_resource("background")  # Обратите внимание, что используем rm2
+print(f"Ресурс получен: {resource is not None}")
+
+print(f"Количество загруженных ресурсов: {rm1.get_loaded_resources_count()}")
+```
+
+</details>
+
+#### Задание 1.2: Реализация логгера как Singleton
+
+Создайте класс `GameLogger` как Singleton для ведения игровых логов. Реализуйте методы для записи сообщений разных уровней (INFO, WARNING, ERROR), получения истории логов и очистки логов. Используйте `__new__` для обеспечения единственности экземпляра.
+
+```python
+class GameLogger:
+    # ВАШ КОД ЗДЕСЯ - реализуйте Singleton через __new__
+    pass  # Замените на ваш код
+
+    def log(self, message, level="INFO"):
+        # ВАШ КОД ЗДЕСЯ - реализуйте запись лога
+        pass  # Замените на ваш код
+
+    def get_logs(self, level_filter=None):
+        # ВАШ КОД ЗДЕСЯ - реализуйте получение логов с фильтрацией
+        pass  # Замените на ваш код
+
+    def clear_logs(self):
+        # ВАШ КОД ЗДЕСЯ - реализуйте очистку логов
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# logger1 = GameLogger()
+# logger2 = GameLogger()
+# print(f"Одинаковые экземпляры: {logger1 is logger2}")  # Должно быть True
+# logger1.log("Игра запущена", "INFO")
+# logger2.log("Ошибка загрузки уровня", "ERROR")  # Используем logger2
+# print(f"Все логи: {logger1.get_logs()}")
+# print(f"Только ошибки: {logger1.get_logs(level_filter='ERROR')}")
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+import datetime
+
+class GameLogger:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.logs = []  # История логов
+            cls._instance.log_file = "game.log"  # Файл для сохранения логов
+        return cls._instance
+
+    def log(self, message, level="INFO"):
+        """Запись лога с уровнем"""
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"[{timestamp}] [{level}] {message}"
+        self.logs.append(log_entry)
+        print(log_entry)  # Выводим в консоль
+        # Здесь могла бы быть запись в файл
+        # with open(self.log_file, "a", encoding="utf-8") as f:
+        #     f.write(log_entry + "\n")
+
+    def get_logs(self, level_filter=None):
+        """Получение логов с фильтрацией по уровню"""
+        if level_filter:
+            return [log for log in self.logs if level_filter in log]
+        return self.logs.copy()
+
+    def clear_logs(self):
+        """Очистка всех логов"""
+        self.logs.clear()
+        print("Логи очищены")
+
+# Пример использования
+logger1 = GameLogger()
+logger2 = GameLogger()
+
+print(f"Одинаковые экземпляры: {logger1 is logger2}")  # Должно быть True
+
+logger1.log("Игра запущена", "INFO")
+logger2.log("Ошибка загрузки уровня", "ERROR")  # Используем logger2
+logger1.log("Игрок вошел в игру", "INFO")
+
+print(f"Все логи: {logger1.get_logs()}")
+print(f"Только ошибки: {logger1.get_logs(level_filter='ERROR')}")
+
+logger1.clear_logs()
+print(f"После очистки: {logger1.get_logs()}")
+```
+
+</details>
+
+
+### Уровень 2 - Средний
+
+#### Задание 2.1: Потокобезопасный Singleton
+
+Реализуйте потокобезопасный `ResourceManager` с использованием блокировок (Lock) для предотвращения создания нескольких экземпляров в многопоточной среде. Используйте двойную проверку блокировки для эффективности. Добавьте метод `get_instance()` для получения экземпляра класса в многопоточной среде.
+
+**Шаги выполнения:**
+1. Создайте класс `ThreadSafeResourceManager` с атрибутом `_instance` и `_lock` для блокировки
+2. Реализуйте метод `__new__` с двойной проверкой блокировки
+3. Добавьте методы для работы с ресурсами (загрузка, получение, выгрузка)
+4. Используйте блокировку при работе с ресурсами для предотвращения гонок
+5. Протестируйте работу в многопоточной среде
 
 ```python
 import threading
 
-class ResourceManager:
-    """
-    Менеджер ресурсов - потокобезопасный Singleton для управления игровыми ресурсами
-    """
+class ThreadSafeResourceManager:
+    # ВАШ КОД ЗДЕСЯ - реализуйте потокобезопасный Singleton
+    pass  # Замените на ваш код
+
+    def load_resource(self, resource_name, resource_path):
+        # ВАШ КОД ЗДЕСЯ - реализуйте потокобезопасную загрузку ресурса
+        pass  # Замените на ваш код
+
+    def get_resource(self, resource_name):
+        # ВАШ КОД ЗДЕСЯ - реализуйте потокобезопасное получение ресурса
+        pass  # Замените на ваш код
+
+    def get_loaded_resources_count(self):
+        # ВАШ КОД ЗДЕСЯ - реализуйте получение количества ресурсов
+        pass  # Замените на ваш код
+
+def create_resource_manager(results, idx):
+    """Функция для создания экземпляра в отдельном потоке"""
+    # ВАШ КОД ЗДЕСЯ - создайте экземпляр и сохраните в results
+    pass  # Замените на ваш код
+
+# Тестирование в многопоточной среде
+# threads = []
+# results = [None] * 5  # Создаем 5 потоков
+# for i in range(5):
+#     t = threading.Thread(target=create_resource_manager, args=(results, i))
+#     threads.append(t)
+#
+# for t in threads:
+#     t.start()
+#
+# for t in threads:
+#     t.join()
+#
+# # Проверяем результаты
+# ids = [id(r) for r in results]
+# print(f"ID экземпляров: {ids}")
+# print(f"Все ID одинаковы: {len(set(ids)) == 1}")
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+import threading
+
+class ThreadSafeResourceManager:
     _instance = None
     _lock = threading.Lock()
 
@@ -86,7 +367,7 @@ class ResourceManager:
         return cls._instance
 
     def load_resource(self, resource_name, resource_path):
-        """Загрузка ресурса в кэш"""
+        """Потокобезопасная загрузка ресурса в кэш"""
         with self._lock:
             if resource_name not in self.resources:
                 print(f"Загружаем ресурс: {resource_name} из {resource_path}")
@@ -97,11 +378,12 @@ class ResourceManager:
                 print(f"Ресурс {resource_name} уже загружен")
 
     def get_resource(self, resource_name):
-        """Получение ресурса из кэша"""
-        return self.resources.get(resource_name, None)
+        """Потокобезопасное получение ресурса из кэша"""
+        with self._lock:
+            return self.resources.get(resource_name, None)
 
     def unload_resource(self, resource_name):
-        """Выгрузка ресурса из кэша"""
+        """Потокобезопасная выгрузка ресурса из кэша"""
         with self._lock:
             if resource_name in self.resources:
                 del self.resources[resource_name]
@@ -110,14 +392,88 @@ class ResourceManager:
                 print(f"Ресурс {resource_name} не найден в кэше")
 
     def get_loaded_resources_count(self):
-        """Получить количество загруженных ресурсов"""
-        return len(self.resources)
+        """Потокобезопасное получение количества загруженных ресурсов"""
+        with self._lock:
+            return len(self.resources)
+
+def create_resource_manager(results, idx):
+    """Функция для создания экземпляра в отдельном потоке"""
+    import time
+    time.sleep(0.1)  # Небольшая задержка для симуляции конкурентности
+    results[idx] = ThreadSafeResourceManager()
+
+# Тестирование в многопоточной среде
+print("=== Тестирование потокобезопасного Singleton ===")
+threads = []
+results = [None] * 5  # Создаем 5 потоков
+
+for i in range(5):
+    t = threading.Thread(target=create_resource_manager, args=(results, i))
+    threads.append(t)
+
+for t in threads:
+    t.start()
+
+for t in threads:
+    t.join()
+
+# Проверяем результаты
+ids = [id(r) for r in results]
+print(f"ID экземпляров: {ids}")
+print(f"Все ID одинаковы: {len(set(ids)) == 1}")
+
+# Демонстрация работы с ресурсами из разных потоков
+rm = results[0]  # Берем первый экземпляр
+print(f"\nЗагрузка ресурсов в потокобезопасном режиме:")
+rm.load_resource("texture1", "/assets/texture1.png")
+rm.load_resource("model1", "/assets/model1.obj")
+print(f"Количество загруженных ресурсов: {rm.get_loaded_resources_count()}")
 ```
 
-### Задача 3: Реализация через метакласс для игрового логгера (20 баллов)
-Создайте метакласс `SingletonMeta`, который:
-- Обеспечивает паттерн Singleton для любого класса
-- Примените его к классу `GameLogger` для ведения логов в игре
+</details>
+
+#### Задание 2.2: Реализация через метакласс
+
+Создайте метакласс `SingletonMeta`, который обеспечивает паттерн Singleton для любого класса. Примените его к классу `GameSettings` для управления настройками игры. Реализуйте потокобезопасность с использованием метакласса. Добавьте методы для установки и получения настроек игры (громкость, разрешение, качество графики и т.д.).
+
+```python
+import threading
+
+class SingletonMeta(type):
+    # ВАШ КОД ЗДЕСЯ - реализуйте метакласс для Singleton
+    pass  # Замените на ваш код
+
+class GameSettings(metaclass=SingletonMeta):
+    # ВАШ КОД ЗДЕСЯ - реализуйте класс настроек игры
+    pass  # Замените на ваш код
+
+    def set_volume(self, volume):
+        # ВАШ КОД ЗДЕСЯ - реализуйте установку громкости
+        pass  # Замените на ваш код
+
+    def set_resolution(self, width, height):
+        # ВАШ КОД ЗДЕСЯ - реализуйте установку разрешения
+        pass  # Замените на ваш код
+
+    def toggle_fullscreen(self):
+        # ВАШ КОД ЗДЕСЯ - реализуйте переключение полноэкранного режима
+        pass  # Замените на ваш код
+
+    def get_settings_summary(self):
+        # ВАШ КОД ЗДЕСЯ - реализуйте получение сводки настроек
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# settings1 = GameSettings()
+# settings2 = GameSettings()
+# print(f"Одинаковые экземпляры: {settings1 is settings2}")  # Должно быть True
+# settings1.set_volume(80)
+# settings2.set_resolution(1920, 1080)  # Используем settings2
+# print(settings1.get_settings_summary())
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
 
 ```python
 import threading
@@ -137,74 +493,19 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-class GameLogger(metaclass=SingletonMeta):
-    """
-    Логгер игры - Singleton для ведения игровых логов
-    """
-    def __init__(self):
-        if not hasattr(self, 'logs'):
-            self.logs = []
-            self.log_file = "game.log"
-
-    def log(self, message, level="INFO"):
-        """Запись лога с уровнем"""
-        import datetime
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = f"[{timestamp}] [{level}] {message}"
-        self.logs.append(log_entry)
-        print(log_entry)  # Выводим в консоль
-        # Здесь могла бы быть запись в файл
-        # with open(self.log_file, "a", encoding="utf-8") as f:
-        #     f.write(log_entry + "\n")
-
-    def get_logs(self, level_filter=None):
-        """Получить логи с фильтрацией по уровню"""
-        if level_filter:
-            return [log for log in self.logs if level_filter in log]
-        return self.logs.copy()
-
-    def clear_logs(self):
-        """Очистить все логи"""
-        self.logs.clear()
-        print("Логи очищены")
-```
-
-### Задача 4: Декоратор Singleton для игровой настройки (20 баллов)
-Создайте декоратор `singleton`, который:
-- Преобразует любой класс в Singleton
-- Примените его к классу `GameSettings` для управления настройками игры
-
-```python
-import threading
-
-def singleton(cls):
-    """
-    Декоратор для превращения класса в Singleton
-    """
-    instances = {}
-    lock = threading.Lock()
-
-    def get_instance(*args, **kwargs):
-        if cls not in instances:
-            with lock:
-                if cls not in instances:
-                    instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-
-    return get_instance
-
-
-@singleton
-class GameSettings:
+class GameSettings(metaclass=SingletonMeta):
     """
     Настройки игры - Singleton для управления настройками приложения
     """
     def __init__(self):
-        self.volume = 80
-        self.resolution = (1920, 1080)
-        self.fullscreen = False
-        self.graphics_quality = "high"
-        self.controls = {"move_forward": "W", "move_backward": "S", "jump": "SPACE"}
+        # Защита от повторной инициализации атрибутов
+        if not hasattr(self, 'initialized'):
+            self.volume = 80
+            self.resolution = (1920, 1080)
+            self.fullscreen = False
+            self.graphics_quality = "high"
+            self.controls = {"move_forward": "W", "move_backward": "S", "jump": "SPACE"}
+            self.initialized = True
 
     def set_volume(self, volume):
         """Установить громкость"""
@@ -235,105 +536,129 @@ class GameSettings:
         - Полноэкранный режим: {'Да' if self.fullscreen else 'Нет'}
         - Качество графики: {self.graphics_quality}
         """
+
+# Пример использования
+settings1 = GameSettings()
+settings2 = GameSettings()
+
+print(f"Одинаковые экземпляры: {settings1 is settings2}")  # Должно быть True
+
+settings1.set_volume(80)
+settings2.set_resolution(1920, 1080)  # Используем settings2
+settings1.toggle_fullscreen()
+
+print(settings1.get_settings_summary())
+
+# Проверка, что изменения применяются к одному и тому же экземпляру
+print(f"Громкость в settings2: {settings2.volume}%")  # Должно быть 80%
 ```
 
-### Задача 5: Применение Singleton в реальном игровом сценарии (20 баллов)
-Реализуйте систему уведомлений:
-- Класс `NotificationManager` как Singleton
-- Методы для отправки различных типов уведомлений
-- Очередь уведомлений и возможность их просмотра
+</details>
+
+
+### Уровень 3 - Повышенный
+
+#### Задание 3.1: Декоратор Singleton
+
+Создайте декоратор `singleton`, который превращает любой класс в Singleton. Примените его к классу `AudioManager` для управления аудио в игре. Реализуйте потокобезопасность с использованием декоратора. Добавьте методы для воспроизведения музыки и звуковых эффектов, регулировки громкости и управления аудио-ресурсами. Убедитесь, что все методы работают корректно в многопоточной среде.
+
+**Шаги выполнения:**
+1. Создайте декоратор `singleton` с использованием потокобезопасной логики
+2. Примените декоратор к классу `AudioManager`
+3. Реализуйте методы для управления аудио (воспроизведение, громкость, загрузка ресурсов)
+4. Протестируйте работу в многопоточной среде
+5. Убедитесь, что все методы обеспечивают потокобезопасность
 
 ```python
 import threading
-from datetime import datetime
 
-class NotificationManager(metaclass=SingletonMeta):
-    """
-    Менеджер уведомлений - Singleton для управления игровыми уведомлениями
-    """
-    def __init__(self):
-        if not hasattr(self, 'notifications'):
-            self.notifications = []
-            self.subscribers = []  # Список подписчиков на уведомления
+def singleton(cls):
+    # ВАШ КОД ЗДЕСЯ - реализуйте декоратор Singleton
+    pass  # Замените на ваш код
 
-    def subscribe(self, subscriber):
-        """Подписаться на уведомления"""
-        if subscriber not in self.subscribers:
-            self.subscribers.append(subscriber)
-            print(f"{subscriber.__class__.__name__} подписался на уведомления")
+@singleton
+class AudioManager:
+    # ВАШ КОД ЗДЕСЯ - реализуйте класс аудио менеджера
+    pass  # Замените на ваш код
 
-    def unsubscribe(self, subscriber):
-        """Отписаться от уведомлений"""
-        if subscriber in self.subscribers:
-            self.subscribers.remove(subscriber)
-            print(f"{subscriber.__class__.__name__} отписался от уведомлений")
+    def play_music(self, music_track, loop=True):
+        # ВАШ КОД ЗДЕСЯ - реализуйте воспроизведение музыки
+        pass  # Замените на ваш код
 
-    def send_notification(self, message, notification_type="info", priority="normal"):
-        """Отправить уведомление"""
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        notification = {
-            "timestamp": timestamp,
-            "type": notification_type,
-            "priority": priority,
-            "message": message
-        }
-        self.notifications.append(notification)
-        print(f"[{notification_type.upper()}] {message}")
+    def play_sound_effect(self, sfx_name):
+        # ВАШ КОД ЗДЕСЯ - реализуйте воспроизведение звукового эффекта
+        pass  # Замените на ваш код
 
-        # Уведомить всех подписчиков
-        for subscriber in self.subscribers:
-            if hasattr(subscriber, 'receive_notification'):
-                subscriber.receive_notification(notification)
+    def set_music_volume(self, volume):
+        # ВАШ КОД ЗДЕСЯ - реализуйте установку громкости музыки
+        pass  # Замените на ваш код
 
-    def get_notifications(self, notification_type=None, limit=None):
-        """Получить уведомления с возможностью фильтрации"""
-        filtered_notifications = self.notifications
-        if notification_type:
-            filtered_notifications = [n for n in filtered_notifications if n["type"] == notification_type]
-        if limit:
-            filtered_notifications = filtered_notifications[-limit:]
-        return filtered_notifications
+    def set_sfx_volume(self, volume):
+        # ВАШ КОД ЗДЕСЯ - реализуйте установку громкости звуковых эффектов
+        pass  # Замените на ваш код
 
-    def clear_notifications(self):
-        """Очистить все уведомления"""
-        count = len(self.notifications)
-        self.notifications.clear()
-        print(f"Очищено {count} уведомлений")
+    def toggle_mute(self):
+        # ВАШ КОД ЗДЕСЯ - реализуйте вкл/выкл звук
+        pass  # Замените на ваш код
 
-    def get_unread_count(self):
-        """Получить количество непрочитанных уведомлений"""
-        # В этой реализации все уведомления считаются непрочитанными
-        return len(self.notifications)
+    def preload_audio(self, audio_name, audio_path):
+        # ВАШ КОД ЗДЕСЯ - реализуйте предзагрузку аудио
+        pass  # Замените на ваш код
+
+def create_audio_manager(results, idx):
+    """Функция для создания экземпляра в отдельном потоке"""
+    # ВАШ КОД ЗДЕСЯ - создайте экземпляр и сохраните в results
+    pass  # Замените на ваш код
+
+# Тестирование в многопоточной среде
+# threads = []
+# results = [None] * 3  # Создаем 3 потока
+# for i in range(3):
+#     t = threading.Thread(target=create_audio_manager, args=(results, i))
+#     threads.append(t)
+#
+# for t in threads:
+#     t.start()
+#
+# for t in threads:
+#     t.join()
+#
+# # Проверяем результаты
+# ids = [id(r) for r in results]
+# print(f"ID экземпляров: {ids}")
+# print(f"Все ID одинаковы: {len(set(ids)) == 1}")
 ```
 
-## Методические указания
-1. Используйте разные подходы к реализации Singleton (через `__new__`, метаклассы, декораторы)
-2. Обратите внимание на потокобезопасность при многопоточном использовании в игровых приложениях
-3. Рассмотрите плюсы и минусы использования паттерна Singleton в игровой разработке
-4. Следите за тем, чтобы Singleton действительно обеспечивал уникальность экземпляра в игровом контексте
-
-## Требования к отчету
-- Исходный код всех реализаций Singleton с игровой тематикой
-- Примеры использования каждого подхода в игровом контексте
-- Сравнение различных реализаций и их применимость в игровых приложениях
-
-## Критерии оценки
-- Корректная реализация паттерна Singleton в игровом контексте: 50%
-- Понимание различных подходов к реализации в игровой разработке: 30%
-- Качество кода и документация в игровом контексте: 20%
-
-## Практические задания
-
-### Задание 1: Менеджер аудио как Singleton
-
-Реализуйте `AudioManager` как Singleton для управления звуком в игре. Добавьте методы для воспроизведения музыки и звуковых эффектов, регулировки громкости и управления аудио-ресурсами.
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
 
 ```python
-class AudioManager(metaclass=SingletonMeta):
+import threading
+
+def singleton(cls):
+    """
+    Декоратор для превращения класса в Singleton
+    """
+    instances = {}
+    lock = threading.Lock()
+
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            with lock:
+                if cls not in instances:
+                    instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return get_instance
+
+
+@singleton
+class AudioManager:
     """
     Менеджер аудио - Singleton для управления звуком в игре
     """
     def __init__(self):
+        # Защита от повторной инициализации атрибутов
         if not hasattr(self, 'initialized'):
             self.music_volume = 80
             self.sfx_volume = 100
@@ -412,9 +737,36 @@ class AudioManager(metaclass=SingletonMeta):
         return f"AudioManager (ID: {id(self)}, Music Vol: {self.music_volume}%, SFX Vol: {self.sfx_volume}%, Muted: {self.is_muted})"
 
 
+def create_audio_manager(results, idx):
+    """Функция для создания экземпляра в отдельном потоке"""
+    import time
+    time.sleep(0.1)  # Небольшая задержка для симуляции конкурентности
+    results[idx] = AudioManager()
+
+
+# Тестирование в многопоточной среде
+print("=== Тестирование Singleton через декоратор ===")
+threads = []
+results = [None] * 3  # Создаем 3 потока
+
+for i in range(3):
+    t = threading.Thread(target=create_audio_manager, args=(results, i))
+    threads.append(t)
+
+for t in threads:
+    t.start()
+
+for t in threads:
+    t.join()
+
+# Проверяем результаты
+ids = [id(r) for r in results]
+print(f"ID экземпляров: {ids}")
+print(f"Все ID одинаковы: {len(set(ids)) == 1}")
+
 # Демонстрация использования
-audio_manager1 = AudioManager()
-audio_manager2 = AudioManager()
+audio_manager1 = results[0]  # Берем первый экземпляр
+audio_manager2 = AudioManager()  # Создаем еще один (должен быть тем же)
 
 print(f"Одинаковые экземпляры: {audio_manager1 is audio_manager2}")  # Должно быть True
 
@@ -427,267 +779,10 @@ audio_manager2.play_sound_effect("sword_swing")  # Используем втор
 print(audio_manager1.get_instance_info())
 ```
 
-### Задание 2: Менеджер сохранений как Singleton
+</details>
 
-Создайте `SaveManager` как Singleton для управления сохранением и загрузкой игровых данных. Реализуйте методы для сохранения прогресса, загрузки игры и управления слотами сохранения.
+#### Задание 3.2: Комплексная игровая система с несколькими Singleton
 
-```python
-import json
-import os
-
-@singleton
-class SaveManager:
-    """
-    Менеджер сохранений - Singleton для управления сохранением и загрузкой игры
-    """
-    def __init__(self):
-        self.save_directory = "saves"
-        self.max_save_slots = 5
-        self.auto_save_enabled = True
-
-        # Создаем директорию для сохранений, если её нет
-        if not os.path.exists(self.save_directory):
-            os.makedirs(self.save_directory)
-
-    def create_save_slot(self, slot_number, game_data):
-        """Создать сохранение в определенном слоте"""
-        if not 1 <= slot_number <= self.max_save_slots:
-            print(f"Неверный номер слота. Допустимые значения: 1-{self.max_save_slots}")
-            return False
-
-        save_file = os.path.join(self.save_directory, f"save_{slot_number}.json")
-        save_info = {
-            "timestamp": datetime.now().isoformat(),
-            "slot_number": slot_number,
-            "game_data": game_data
-        }
-
-        try:
-            with open(save_file, 'w', encoding='utf-8') as f:
-                json.dump(save_info, f, ensure_ascii=False, indent=2)
-            print(f"Игра сохранена в слот {slot_number}")
-            return True
-        except Exception as e:
-            print(f"Ошибка при сохранении в слот {slot_number}: {e}")
-            return False
-
-    def load_from_slot(self, slot_number):
-        """Загрузить игру из определенного слота"""
-        if not 1 <= slot_number <= self.max_save_slots:
-            print(f"Неверный номер слота. Допустимые значения: 1-{self.max_save_slots}")
-            return None
-
-        save_file = os.path.join(self.save_directory, f"save_{slot_number}.json")
-
-        if not os.path.exists(save_file):
-            print(f"Слот {slot_number} пустой или файл не существует")
-            return None
-
-        try:
-            with open(save_file, 'r', encoding='utf-8') as f:
-                save_info = json.load(f)
-            print(f"Игра загружена из слота {slot_number}")
-            return save_info["game_data"]
-        except Exception as e:
-            print(f"Ошибка при загрузке из слота {slot_number}: {e}")
-            return None
-
-    def list_save_slots(self):
-        """Получить список доступных слотов сохранения"""
-        saves = []
-        for i in range(1, self.max_save_slots + 1):
-            save_file = os.path.join(self.save_directory, f"save_{i}.json")
-            if os.path.exists(save_file):
-                try:
-                    with open(save_file, 'r', encoding='utf-8') as f:
-                        save_info = json.load(f)
-                    saves.append({
-                        "slot": i,
-                        "timestamp": save_info["timestamp"],
-                        "has_data": True
-                    })
-                except:
-                    saves.append({
-                        "slot": i,
-                        "timestamp": "неизвестно",
-                        "has_data": False
-                    })
-            else:
-                saves.append({
-                    "slot": i,
-                    "timestamp": None,
-                    "has_data": False
-                })
-        return saves
-
-    def delete_save_slot(self, slot_number):
-        """Удалить сохранение из слота"""
-        if not 1 <= slot_number <= self.max_save_slots:
-            print(f"Неверный номер слота. Допустимые значения: 1-{self.max_save_slots}")
-            return False
-
-        save_file = os.path.join(self.save_directory, f"save_{slot_number}.json")
-
-        if os.path.exists(save_file):
-            os.remove(save_file)
-            print(f"Слот {slot_number} очищен")
-            return True
-        else:
-            print(f"Слот {slot_number} и так пустой")
-            return False
-
-    def auto_save(self, game_data, slot_number=1):
-        """Автоматическое сохранение"""
-        if self.auto_save_enabled:
-            return self.create_save_slot(slot_number, game_data)
-        else:
-            print("Автосохранение отключено")
-            return False
-
-    def get_save_info(self, slot_number):
-        """Получить информацию о сохранении в слоте"""
-        if not 1 <= slot_number <= self.max_save_slots:
-            print(f"Неверный номер слота. Допустимые значения: 1-{self.max_save_slots}")
-            return None
-
-        save_file = os.path.join(self.save_directory, f"save_{slot_number}.json")
-
-        if os.path.exists(save_file):
-            try:
-                with open(save_file, 'r', encoding='utf-8') as f:
-                    save_info = json.load(f)
-                return {
-                    "slot": slot_number,
-                    "timestamp": save_info["timestamp"],
-                    "has_data": True,
-                    "data_preview": dict(list(save_info["game_data"].items())[:3]) # Первые 3 поля данных
-                }
-            except Exception as e:
-                print(f"Ошибка при чтении информации о слоте {slot_number}: {e}")
-                return None
-        else:
-            return {
-                "slot": slot_number,
-                "timestamp": None,
-                "has_data": False,
-                "data_preview": None
-            }
-
-
-# Демонстрация использования
-save_manager1 = SaveManager()
-save_manager2 = SaveManager()
-
-print(f"Одинаковые экземпляры: {save_manager1 is save_manager2}")  # Должно быть True
-
-# Сохраняем игру
-game_data = {
-    "player_name": "Артур",
-    "level": 5,
-    "score": 15000,
-    "position": {"x": 100, "y": 200},
-    "inventory": ["меч", "щит", "зелье"]
-}
-
-save_manager1.create_save_slot(1, game_data)
-
-# Загружаем игру
-loaded_data = save_manager2.load_from_slot(1)
-if loaded_data:
-    print(f"Загруженные данные: {loaded_data['player_name']}, уровень {loaded_data['level']}")
-
-# Проверяем список слотов
-saves = save_manager1.list_save_slots()
-for save in saves:
-    status = "занят" if save["has_data"] else "пустой"
-    print(f"Слот {save['slot']}: {status} {save['timestamp'] or ''}")
-```
-
-### Задача 3: Сравнение различных реализаций Singleton
-
-Создайте три разных класса Singleton (с использованием `__new__`, метакласса и декоратора) и сравните их поведение в многопоточной среде. Напишите тест, который создает экземпляры в разных потоках и проверяет, что всегда создается только один экземпляр.
+Создайте комплексную игровую систему, объединяющую несколько Singleton классов: `GameManager`, `ResourceManager`, `GameLogger`, `GameSettings`, `AudioManager`. Реализуйте взаимодействие между этими системами. Создайте класс `GameEngine`, который будет использовать все эти менеджеры для управления игрой. Убедитесь, что все менеджеры работают как настоящие Singleton и правильно взаимодействуют друг с другом в многопоточной среде.
 
 ```python
-import threading
-import time
-
-# Singleton реализованный через __new__
-class NewStyleSingleton:
-    _instance = None
-    _lock = threading.Lock()
-
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-                    cls._instance.creation_time = time.time()
-        return cls._instance
-
-# Singleton реализованный через метакласс
-class MetaSingleton(metaclass=SingletonMeta):
-    def __init__(self):
-        if not hasattr(self, 'creation_time'):
-            self.creation_time = time.time()
-
-# Singleton реализованный через декоратор
-@singleton
-class DecoratorSingleton:
-    def __init__(self):
-        self.creation_time = time.time()
-
-def create_instance(cls, results, idx):
-    """Функция для создания экземпляра в отдельном потоке"""
-    time.sleep(0.1)  # Небольшая задержка для симуляции конкурентности
-    instance = cls()
-    results[idx] = (instance, id(instance), instance.creation_time)
-
-def test_multithreaded_singleton(cls, cls_name):
-    """Тест многопоточного создания экземпляров Singleton"""
-    print(f"\nТестирование {cls_name}:")
-    threads = []
-    results = [None] * 5  # Создаем 5 потоков
-
-    # Создаем потоки
-    for i in range(5):
-        t = threading.Thread(target=create_instance, args=(cls, results, i))
-        threads.append(t)
-
-    # Запускаем потоки
-    for t in threads:
-        t.start()
-
-    # Ждем завершения всех потоков
-    for t in threads:
-        t.join()
-
-    # Проверяем результаты
-    ids = [result[1] for result in results]
-    times = [result[2] for result in results]
-
-    print(f"  ID экземпляров: {ids}")
-    print(f"  Все ID одинаковы: {len(set(ids)) == 1}")
-    print(f"  Времена создания: {times}")
-
-# Запускаем тесты
-test_multithreaded_singleton(NewStyleSingleton, "NewStyleSingleton")
-test_multithreaded_singleton(MetaSingleton, "MetaSingleton")
-test_multithreaded_singleton(DecoratorSingleton, "DecoratorSingleton")
-```
-
-## Дополнительные задания
-
-### Задание 4: Игровой менеджер событий
-
-Создайте `EventManager` как Singleton для управления игровыми событиями. Реализуйте систему подписки на события, публикации событий и обработки событий различными компонентами игры.
-
-### Задание 5: Менеджер шаблонов
-
-Реализуйте `TemplateManager` как Singleton для управления шаблонами игровых объектов (например, шаблоны монстров, предметов, уровней).
-
-## Контрольные вопросы:
-1. В чем разница между различными способами реализации Singleton (через `__new__`, метакласс, декоратор)?
-2. Как обеспечить потокобезопасность Singleton в многопоточной игровой среде?
-3. В каких случаях в игровой разработке целесообразно использовать паттерн Singleton?
-4. Какие проблемы могут возникнуть при использовании Singleton в тестировании игровой логики?
-5. Какие альтернативы Singleton существуют для управления глобальным состоянием в игре?
