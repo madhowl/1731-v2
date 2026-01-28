@@ -1,285 +1,345 @@
-# Упражнения для практического занятия 14: ООП - паттерн Factory
+"""
+Практическое задание 14: Паттерн Factory в игровом контексте
+
+Цель: Реализовать паттерн Factory для создания игровых объектов без указания их конкретных классов.
+"""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-import time
 
-# Задание 1: Простая фабрика
-class Vehicle(ABC):
-    """Абстрактный класс транспортного средства"""
+# Уровень 1 - Начальный
+# Задание 1.1: Создать простую фабрику для создания игровых персонажей
+
+class GameCharacter(ABC):
+    """
+    Абстрактный класс игрового персонажа
+    """
+    def __init__(self, name, health, attack_power, character_class="unknown"):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack_power = attack_power
+        self.character_class = character_class
+        self.level = 1
+        self.is_alive = True
+
     @abstractmethod
-    def drive(self) -> str:
+    def special_ability(self):
+        """
+        Специальная способность персонажа
+        """
         pass
 
-class Car(Vehicle):
-    def drive(self) -> str:
-        return "Вождение автомобиля"
+    def get_info(self):
+        """
+        Получить информацию о персонаже
+        """
+        status = "жив" if self.is_alive else "мертв"
+        return f"{self.name} ({self.character_class}, {status}): Lvl.{self.level}, HP {self.health}/{self.max_health}, ATK {self.attack_power}"
 
-class Motorcycle(Vehicle):
-    def drive(self) -> str:
-        return "Вождение мотоцикла"
+    def take_damage(self, damage):
+        """Получить урон"""
+        self.health -= damage
+        if self.health <= 0:
+            self.health = 0
+            self.is_alive = False
 
-class Truck(Vehicle):
-    def drive(self) -> str:
-        return "Вождение грузовика"
+    def restore_health(self, amount):
+        """Восстановить здоровье"""
+        self.health = min(self.max_health, self.health + amount)
 
-class VehicleFactory:
-    """Фабрика для создания транспортных средств"""
+
+class Warrior(GameCharacter):
+    """
+    Класс воина - реализуйте конструктор и специальную способность
+    """
+    # TODO: Реализуйте конструктор, вызывающий родительский конструктор
+    # TODO: Реализуйте метод special_ability()
+    pass
+
+
+class Mage(GameCharacter):
+    """
+    Класс мага - реализуйте конструктор и специальную способность
+    """
+    # TODO: Реализуйте конструктор, вызывающий родительский конструктор
+    # TODO: Реализуйте метод special_ability()
+    pass
+
+
+class Archer(GameCharacter):
+    """
+    Класс лучника - реализуйте конструктор и специальную способность
+    """
+    # TODO: Реализуйте конструктор, вызывающий родительский конструктор
+    # TODO: Реализуйте метод special_ability()
+    pass
+
+
+class CharacterFactory:
+    """
+    Фабрика для создания игровых персонажей
+    """
     @staticmethod
-    def create_vehicle(vehicle_type: str) -> Vehicle:
-        if vehicle_type.lower() == "car":
-            return Car()
-        elif vehicle_type.lower() == "motorcycle":
-            return Motorcycle()
-        elif vehicle_type.lower() == "truck":
-            return Truck()
-        else:
-            raise ValueError(f"Неизвестный тип транспортного средства: {vehicle_type}")
-
-# Задание 2: Фабричный метод
-class Document(ABC):
-    """Абстрактный класс документа"""
-    @abstractmethod
-    def create(self) -> str:
+    def create_character(character_type, name):
+        """
+        Создать персонажа по типу
+        """
+        # TODO: Реализуйте фабричный метод для создания персонажей разных типов
         pass
 
-class PDFDocument(Document):
-    def create(self) -> str:
-        return "Создание PDF документа"
 
-class WordDocument(Document):
-    def create(self) -> str:
-        return "Создание Word документа"
+# Уровень 2 - Средний
+# Задание 2.1: Реализовать паттерн "Фабричный метод" для создания игровых предметов
 
-class ExcelDocument(Document):
-    def create(self) -> str:
-        return "Создание Excel документа"
+class GameItem(ABC):
+    """
+    Абстрактный класс игрового предмета
+    """
+    def __init__(self, name, item_type, value, weight=1.0):
+        self.name = name
+        self.item_type = item_type
+        self.value = value
+        self.weight = weight
 
-class DocumentCreator(ABC):
-    """Абстрактный класс создателя документов"""
     @abstractmethod
-    def create_document(self) -> Document:
+    def use(self, character):
+        """
+        Использовать предмет на персонаже
+        """
         pass
-    
-    def save_document(self) -> str:
-        document = self.create_document()
-        return f"Сохранение: {document.create()}"
 
-class PDFDocumentCreator(DocumentCreator):
-    def create_document(self) -> Document:
-        return PDFDocument()
+    def get_info(self):
+        return f"{self.name} ({self.item_type}): стоимость {self.value}, вес {self.weight}"
 
-class WordDocumentCreator(DocumentCreator):
-    def create_document(self) -> Document:
-        return WordDocument()
 
-class ExcelDocumentCreator(DocumentCreator):
-    def create_document(self) -> Document:
-        return ExcelDocument()
+class Weapon(GameItem):
+    """
+    Класс оружия
+    """
+    # TODO: Реализуйте конструктор и метод use()
+    pass
 
-# Задание 3: Абстрактная фабрика
+
+class Potion(GameItem):
+    """
+    Класс зелья
+    """
+    # TODO: Реализуйте конструктор и метод use()
+    pass
+
+
+class Armor(GameItem):
+    """
+    Класс брони
+    """
+    # TODO: Реализуйте конструктор и метод use()
+    pass
+
+
+class ItemCreator(ABC):
+    """
+    Абстрактный создатель предметов
+    """
+    @abstractmethod
+    def create_item(self, name, **kwargs):
+        pass
+
+    def get_item(self, name, **kwargs):
+        """Шаблонный метод для получения предмета"""
+        item = self.create_item(name, **kwargs)
+        return item
+
+
+class WeaponCreator(ItemCreator):
+    """
+    Создатель оружия
+    """
+    # TODO: Реализуйте метод create_item()
+    pass
+
+
+class PotionCreator(ItemCreator):
+    """
+    Создатель зелий
+    """
+    # TODO: Реализуйте метод create_item()
+    pass
+
+
+class ArmorCreator(ItemCreator):
+    """
+    Создатель брони
+    """
+    # TODO: Реализуйте метод create_item()
+    pass
+
+
+# Уровень 3 - Повышенный
+# Задание 3.1: Реализовать абстрактную фабрику для UI-элементов
+
 class Button(ABC):
-    """Абстрактный класс кнопки"""
+    """
+    Абстрактный класс кнопки
+    """
+    def __init__(self, text, width=100, height=30):
+        self.text = text
+        self.width = width
+        self.height = height
+
     @abstractmethod
-    def render(self) -> str:
+    def render(self):
         pass
+
+    def click(self):
+        return f"Кнопка '{self.text}' нажата"
+
 
 class TextField(ABC):
-    """Абстрактный класс текстового поля"""
+    """
+    Абстрактный класс текстового поля
+    """
+    def __init__(self, placeholder="", width=200, height=30):
+        self.placeholder = placeholder
+        self.width = width
+        self.height = height
+        self.content = ""
+
     @abstractmethod
-    def render(self) -> str:
+    def render(self):
         pass
 
-class WindowsButton(Button):
-    def render(self) -> str:
-        return "Отображение Windows кнопки"
+    def input_text(self, text):
+        self.content = text
+        return f"Введено '{text}' в поле '{self.placeholder}'"
 
-class WindowsTextField(TextField):
-    def render(self) -> str:
-        return "Отображение Windows текстового поля"
-
-class MacButton(Button):
-    def render(self) -> str:
-        return "Отображение Mac кнопки"
-
-class MacTextField(TextField):
-    def render(self) -> str:
-        return "Отображение Mac текстового поля"
-
-class LinuxButton(Button):
-    def render(self) -> str:
-        return "Отображение Linux кнопки"
-
-class LinuxTextField(TextField):
-    def render(self) -> str:
-        return "Отображение Linux текстового поля"
 
 class UIFactory(ABC):
-    """Абстрактная фабрика UI элементов"""
+    """
+    Абстрактная фабрика UI-элементов
+    """
     @abstractmethod
-    def create_button(self) -> Button:
-        pass
-    
-    @abstractmethod
-    def create_text_field(self) -> TextField:
+    def create_button(self, text, width=100, height=30):
         pass
 
-class WindowsUIFactory(UIFactory):
-    def create_button(self) -> Button:
-        return WindowsButton()
-    
-    def create_text_field(self) -> TextField:
-        return WindowsTextField()
-
-class MacUIFactory(UIFactory):
-    def create_button(self) -> Button:
-        return MacButton()
-    
-    def create_text_field(self) -> TextField:
-        return MacTextField()
-
-class LinuxUIFactory(UIFactory):
-    def create_button(self) -> Button:
-        return LinuxButton()
-    
-    def create_text_field(self) -> TextField:
-        return LinuxTextField()
-
-# Задание 4: Параметризованная фабрика
-class Shape(ABC):
-    """Абстрактный класс фигуры"""
-    def __init__(self, color: str, size: float):
-        self.color = color
-        self.size = size
-    
     @abstractmethod
-    def draw(self) -> str:
+    def create_text_field(self, placeholder="", width=200, height=30):
         pass
 
-class Circle(Shape):
-    def draw(self) -> str:
-        return f"Рисование {self.color} круга размером {self.size}"
 
-class Rectangle(Shape):
-    def draw(self) -> str:
-        return f"Рисование {self.color} прямоугольника размером {self.size}"
+class FantasyUIFactory(UIFactory):
+    """
+    Фабрика UI-элементов в фэнтезийном стиле
+    """
+    # TODO: Реализуйте методы create_button() и create_text_field()
+    pass
 
-class Triangle(Shape):
-    def draw(self) -> str:
-        return f"Рисование {self.color} треугольника размером {self.size}"
 
-class ShapeFactory:
-    """Фабрика для создания фигур с параметрами"""
+class SciFiUIFactory(UIFactory):
+    """
+    Фабрика UI-элементов в стиле sci-fi
+    """
+    # TODO: Реализуйте методы create_button() и create_text_field()
+    pass
+
+
+class MedievalUIFactory(UIFactory):
+    """
+    Фабрика UI-элементов в средневековом стиле
+    """
+    # TODO: Реализуйте методы create_button() и create_text_field()
+    pass
+
+
+# Задание 3.2: Параметризованная фабрика для создания монстров
+class Monster(ABC):
+    """
+    Абстрактный класс монстра
+    """
+    def __init__(self, name, health, attack_power, monster_type="common"):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack_power = attack_power
+        self.monster_type = monster_type
+        self.is_alive = True
+
+    @abstractmethod
+    def special_attack(self):
+        pass
+
+    def get_info(self):
+        status = "жив" if self.is_alive else "мертв"
+        return f"{self.name} ({self.monster_type}, {status}): HP {self.health}/{self.max_health}, ATK {self.attack_power}"
+
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.health = 0
+            self.is_alive = False
+
+    def attack(self, target):
+        if self.is_alive and target.is_alive:
+            target.take_damage(self.attack_power)
+            return f"{self.name} атакует {target.name} на {self.attack_power} урона"
+        else:
+            return f"{self.name} не может атаковать"
+
+
+class MonsterFactory:
+    """
+    Фабрика для создания монстров с параметрами
+    """
     @staticmethod
-    def create_shape(shape_type: str, color: str, size: float) -> Shape:
-        if size <= 0:
-            raise ValueError("Размер должен быть положительным")
-        
-        if shape_type.lower() == "circle":
-            return Circle(color, size)
-        elif shape_type.lower() == "rectangle":
-            return Rectangle(color, size)
-        elif shape_type.lower() == "triangle":
-            return Triangle(color, size)
-        else:
-            raise ValueError(f"Неизвестный тип фигуры: {shape_type}")
+    def create_monster(monster_type, name=None, health=None, attack_power=None, difficulty="normal"):
+        """
+        Создать монстра с указанными параметрами
+        """
+        # TODO: Реализуйте фабричный метод для создания монстров с параметрами
+        pass
 
-# Задание 5: Фабрика с кэшированием
-class ObjectPoolFactory:
-    """Фабрика с пулом объектов для повторного использования"""
-    def __init__(self):
-        self._available_objects = {}
-        self._used_objects = {}
-        self._object_creation_time = {}
-    
-    def get_object(self, obj_type: str, *args, **kwargs):
-        """Получить объект из пула или создать новый"""
-        if obj_type not in self._available_objects:
-            self._available_objects[obj_type] = []
-        
-        if self._available_objects[obj_type]:
-            # Возвращаем доступный объект из пула
-            obj = self._available_objects[obj_type].pop()
-            self._used_objects.setdefault(obj_type, []).append(obj)
-            return obj
-        else:
-            # Создаем новый объект
-            if obj_type == "car":
-                obj = Car()
-            elif obj_type == "pdf_doc":
-                obj = PDFDocument()
-            elif obj_type == "circle":
-                obj = Circle("red", 1.0)
-            else:
-                raise ValueError(f"Неизвестный тип объекта: {obj_type}")
-            
-            self._used_objects.setdefault(obj_type, []).append(obj)
-            self._object_creation_time[id(obj)] = time.time()
-            return obj
-    
-    def return_object(self, obj_type: str, obj) -> bool:
-        """Вернуть объект в пул"""
-        if obj_type in self._used_objects and obj in self._used_objects[obj_type]:
-            self._used_objects[obj_type].remove(obj)
-            self._available_objects[obj_type].append(obj)
-            return True
-        return False
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Получить статистику использования пула"""
-        stats = {}
-        for obj_type in self._available_objects:
-            stats[obj_type] = {
-                'available': len(self._available_objects.get(obj_type, [])),
-                'used': len(self._used_objects.get(obj_type, []))
-            }
-        return stats
 
-# Примеры использования:
-if __name__ == "__main__":
-    print("=== Задание 1: Простая фабрика ===")
-    factory = VehicleFactory()
-    car = factory.create_vehicle("car")
-    motorcycle = factory.create_vehicle("motorcycle")
-    print(car.drive())
-    print(motorcycle.drive())
+# Тестирование реализации (раскомментируйте после реализации)
+"""
+# Тестирование уровня 1
+warrior = CharacterFactory.create_character("warrior", "Конан")
+mage = CharacterFactory.create_character("mage", "Мерлин")
+archer = CharacterFactory.create_character("archer", "Робин")
 
-    print("\n=== Задание 2: Фабричный метод ===")
-    creators = [PDFDocumentCreator(), WordDocumentCreator(), ExcelDocumentCreator()]
-    for creator in creators:
-        print(creator.save_document())
+print(warrior.get_info())
+print(mage.get_info())
+print(archer.get_info())
 
-    print("\n=== Задание 3: Абстрактная фабрика ===")
-    factories = {
-        "windows": WindowsUIFactory(),
-        "mac": MacUIFactory(),
-        "linux": LinuxUIFactory()
-    }
-    
-    for os_name, factory in factories.items():
-        button = factory.create_button()
-        text_field = factory.create_text_field()
-        print(f"{os_name}: {button.render()}, {text_field.render()}")
+print(warrior.special_ability())
+print(mage.special_ability())
 
-    print("\n=== Задание 4: Параметризованная фабрика ===")
-    shape_factory = ShapeFactory()
-    circle = shape_factory.create_shape("circle", "красный", 5.0)
-    rectangle = shape_factory.create_shape("rectangle", "синий", 10.0)
-    print(circle.draw())
-    print(rectangle.draw())
+# Тестирование уровня 2
+weapon_creator = WeaponCreator()
+potion_creator = PotionCreator()
+armor_creator = ArmorCreator()
 
-    print("\n=== Задание 5: Фабрика с кэшированием ===")
-    pool = ObjectPoolFactory()
-    
-    # Получаем объекты
-    obj1 = pool.get_object("car")
-    obj2 = pool.get_object("car")
-    print(f"Получено 2 объекта, статус пула: {pool.get_stats()}")
-    
-    # Возвращаем один объект
-    pool.return_object("car", obj1)
-    print(f"Вернули 1 объект, статус пула: {pool.get_stats()}")
-    
-    # Получаем еще один объект (должен получить возвращенный)
-    obj3 = pool.get_object("car")
-    print(f"Получили 3-й объект, статус пула: {pool.get_stats()}")
+sword = weapon_creator.get_item("Меч короля", damage=25, value=200)
+health_potion = potion_creator.get_item("Зелье здоровья", healing_power=50, value=30)
+shield = armor_creator.get_item("Щит", defense=15, value=180)
+
+print(sword.get_info())
+print(health_potion.get_info())
+print(shield.get_info())
+
+# Тестирование уровня 3
+fantasy_factory = FantasyUIFactory()
+scifi_factory = SciFiUIFactory()
+
+fantasy_button = fantasy_factory.create_button("Начать приключение", 150, 40)
+scifi_button = scifi_factory.create_button("Активировать щит", 120, 35)
+
+print(fantasy_button.render())
+print(scifi_button.render())
+print(fantasy_button.click())
+
+# Тестирование фабрики монстров
+goblin = MonsterFactory.create_monster("goblin", "Малыш Гоб", difficulty="hard")
+dragon = MonsterFactory.create_monster("dragon", difficulty="legendary")
+
+print(goblin.get_info())
+print(dragon.get_info())
+"""

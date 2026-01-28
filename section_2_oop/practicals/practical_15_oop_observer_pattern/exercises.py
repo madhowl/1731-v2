@@ -1,316 +1,468 @@
-# Упражнения для практического занятия 15: ООП - паттерн Observer
+"""
+Практическое задание 15: Паттерн Observer в игровом контексте
+
+Цель: Реализовать паттерн Observer для создания системы подписки на события и уведомления об изменениях в игровой среде.
+"""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Callable
-import asyncio
-import time
+from typing import List
 
-# Задание 1: Базовая реализация Observer
+# Уровень 1 - Начальный
+# Задание 1.1: Создать базовую реализацию Observer для игровых событий
+
 class Observer(ABC):
-    """Интерфейс наблюдателя"""
+    """
+    Интерфейс наблюдателя для получения уведомлений об игровых событиях
+    """
     @abstractmethod
-    def update(self, subject, *args, **kwargs):
+    def update(self, event_type: str, data: dict = None):
+        """
+        Метод для получения уведомления об изменении
+        """
         pass
 
 class Subject(ABC):
-    """Интерфейс наблюдаемого объекта"""
+    """
+    Интерфейс субъекта, за которым могут наблюдать наблюдатели
+    """
     def __init__(self):
         self._observers: List[Observer] = []
-    
+
     def attach(self, observer: Observer):
-        """Добавить наблюдателя"""
-        if observer not in self._observers:
-            self._observers.append(observer)
-    
-    def detach(self, observer: Observer):
-        """Удалить наблюдателя"""
-        if observer in self._observers:
-            self._observers.remove(observer)
-    
-    def notify(self, *args, **kwargs):
-        """Уведомить всех наблюдателей"""
-        for observer in self._observers:
-            observer.update(self, *args, **kwargs)
-
-class CurrencyRate(Subject):
-    """Класс курса валюты как наблюдаемый объект"""
-    def __init__(self, currency: str, rate: float):
-        super().__init__()
-        self.currency = currency
-        self.rate = rate
-    
-    def set_rate(self, new_rate: float):
-        """Установить новый курс"""
-        old_rate = self.rate
-        self.rate = new_rate
-        print(f"Курс {self.currency} изменился с {old_rate} на {new_rate}")
-        self.notify(old_rate=old_rate, new_rate=new_rate)
-
-class EmailNotifier(Observer):
-    """Наблюдатель для отправки email-уведомлений"""
-    def __init__(self, email: str):
-        self.email = email
-    
-    def update(self, subject, *args, **kwargs):
-        if isinstance(subject, CurrencyRate):
-            old_rate = kwargs.get('old_rate')
-            new_rate = kwargs.get('new_rate')
-            print(f"EMAIL NOTIFICATION для {self.email}: Курс {subject.currency} изменился с {old_rate} на {new_rate}")
-
-class SMSNotifier(Observer):
-    """Наблюдатель для отправки SMS-уведомлений"""
-    def __init__(self, phone: str):
-        self.phone = phone
-    
-    def update(self, subject, *args, **kwargs):
-        if isinstance(subject, CurrencyRate):
-            old_rate = kwargs.get('old_rate')
-            new_rate = kwargs.get('new_rate')
-            print(f"SMS NOTIFICATION для {self.phone}: Курс {subject.currency} изменился с {old_rate} на {new_rate}")
-
-# Задание 2: Использование встроенных средств
-class EventManager:
-    """Менеджер событий с использованием callback-функций"""
-    def __init__(self):
-        self._callbacks: Dict[str, List[Callable]] = {}
-    
-    def subscribe(self, event_type: str, callback: Callable):
-        """Подписаться на событие"""
-        if event_type not in self._callbacks:
-            self._callbacks[event_type] = []
-        if callback not in self._callbacks[event_type]:
-            self._callbacks[event_type].append(callback)
-    
-    def unsubscribe(self, event_type: str, callback: Callable):
-        """Отписаться от события"""
-        if event_type in self._callbacks and callback in self._callbacks[event_type]:
-            self._callbacks[event_type].remove(callback)
-    
-    def emit(self, event_type: str, data: Any = None):
-        """Вызвать все callback-функции для типа события"""
-        if event_type in self._callbacks:
-            for callback in self._callbacks[event_type]:
-                callback(event_type, data)
-
-# Задание 3: Параметризованные уведомления
-class EventPublisher:
-    """Издатель событий с фильтрацией по типам"""
-    def __init__(self):
-        self._subscribers: Dict[str, List[Callable]] = {}
-    
-    def subscribe(self, event_type: str, handler: Callable):
-        """Подписаться на определенный тип события"""
-        if event_type not in self._subscribers:
-            self._subscribers[event_type] = []
-        if handler not in self._subscribers[event_type]:
-            self._subscribers[event_type].append(handler)
-    
-    def unsubscribe(self, event_type: str, handler: Callable):
-        """Отписаться от определенного типа события"""
-        if event_type in self._subscribers and handler in self._subscribers[event_type]:
-            self._subscribers[event_type].remove(handler)
-    
-    def publish(self, event_type: str, event_data: Dict[str, Any]):
-        """Опубликовать событие с данными"""
-        if event_type in self._subscribers:
-            for handler in self._subscribers[event_type]:
-                handler(event_type, event_data)
-
-class EventSubscriber:
-    """Подписчик на события"""
-    def __init__(self, name: str):
-        self.name = name
-    
-    def handle_event(self, event_type: str, event_data: Dict[str, Any]):
-        """Обработать событие"""
-        print(f"{self.name} получил событие '{event_type}': {event_data}")
-
-# Задание 4: Асинхронный Observer
-class AsyncObserver(ABC):
-    """Асинхронный интерфейс наблюдателя"""
-    @abstractmethod
-    async def update_async(self, subject, *args, **kwargs):
+        """Подписаться на уведомления"""
+        # TODO: Реализуйте добавление наблюдателя
         pass
 
-class AsyncSubject(ABC):
-    """Асинхронный наблюдаемый объект"""
+    def detach(self, observer: Observer):
+        """Отписаться от уведомлений"""
+        # TODO: Реализуйте удаление наблюдателя
+        pass
+
+    def notify(self, event_type: str, data: dict = None):
+        """Уведомить всех наблюдателей об изменении"""
+        # TODO: Реализуйте уведомление всех наблюдателей
+        pass
+
+
+class Player(Subject):
+    """
+    Класс игрока, за которым могут наблюдать другие объекты
+    """
+    def __init__(self, name: str, health: int = 100):
+        super().__init__()
+        self.name = name
+        self._health = health
+        self._max_health = health
+        self._level = 1
+        self._experience = 0
+        self.is_alive = True
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        # TODO: Реализуйте сеттер здоровья с уведомлением наблюдателей
+        # когда здоровье изменяется, особенно при смерти
+        pass
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value: int):
+        # TODO: Реализуйте сеттер уровня с уведомлением наблюдателей
+        # при повышении уровня
+        pass
+
+    def take_damage(self, damage: int):
+        """Получить урон"""
+        # TODO: Реализуйте получение урона и уведомление
+        pass
+
+    def gain_experience(self, exp: int):
+        """Получить опыт"""
+        # TODO: Реализуйте получение опыта и уведомление
+        # проверьте, не пора ли повысить уровень
+        pass
+
+    def level_up(self):
+        """Повысить уровень игрока"""
+        # TODO: Реализуйте повышение уровня
+        pass
+
+    def get_info(self):
+        return f"{self.name}: Lvl.{self._level}, HP {self._health}/{self._max_health}, EXP {self._experience}"
+
+
+class Enemy(Subject):
+    """
+    Класс врага, за которым могут наблюдать другие объекты
+    """
+    def __init__(self, name: str, health: int, attack_power: int):
+        super().__init__()
+        self.name = name
+        self._health = health
+        self._max_health = health
+        self.attack_power = attack_power
+        self.is_alive = True
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        # TODO: Реализуйте сеттер здоровья с уведомлением наблюдателей
+        pass
+
+    def take_damage(self, damage: int):
+        """Получить урон"""
+        # TODO: Реализуйте получение урона и уведомление
+        pass
+
+
+# Уровень 2 - Средний
+# Задание 2.1: Реализовать систему уведомлений с использованием callback-функций
+
+class EventManager:
+    """
+    Менеджер событий для управления игровыми событиями
+    """
     def __init__(self):
-        self._async_observers: List[AsyncObserver] = []
-    
-    def attach_async(self, observer: AsyncObserver):
-        """Добавить асинхронного наблюдателя"""
-        if observer not in self._async_observers:
-            self._async_observers.append(observer)
-    
-    def detach_async(self, observer: AsyncObserver):
-        """Удалить асинхронного наблюдателя"""
-        if observer in self._async_observers:
-            self._async_observers.remove(observer)
-    
-    async def notify_async(self, *args, **kwargs):
-        """Асинхронно уведомить всех наблюдателей"""
-        tasks = []
-        for observer in self._async_observers:
-            task = asyncio.create_task(observer.update_async(self, *args, **kwargs))
-            tasks.append(task)
-        
-        if tasks:
-            await asyncio.gather(*tasks)
+        # TODO: Реализуйте инициализацию хранилища обработчиков
+        pass
 
-class AsyncCurrencyRate(AsyncSubject):
-    """Асинхронный класс курса валюты"""
-    def __init__(self, currency: str, rate: float):
+    def subscribe(self, event_type: str, handler):
+        """Подписаться на событие определенного типа"""
+        # TODO: Реализуйте добавление обработчика события
+        pass
+
+    def unsubscribe(self, event_type: str, handler):
+        """Отписаться от события определенного типа"""
+        # TODO: Реализуйте удаление обработчика события
+        pass
+
+    def trigger_event(self, event_type: str, data: dict = None):
+        """Вызвать событие и уведомить всех подписчиков"""
+        # TODO: Реализуйте вызов всех обработчиков для события
+        pass
+
+    def get_subscribers_count(self, event_type: str) -> int:
+        """Получить количество подписчиков на событие"""
+        # TODO: Реализуйте подсчет подписчиков
+        pass
+
+
+# Примеры обработчиков событий (заполните реализации)
+def player_damaged_handler(event_type: str, data: dict):
+    """Обработчик события получения урона игроком"""
+    # TODO: Реализуйте обработчик
+    pass
+
+def enemy_defeated_handler(event_type: str, data: dict):
+    """Обработчик события уничтожения врага"""
+    # TODO: Реализуйте обработчик
+    pass
+
+def level_up_handler(event_type: str, data: dict):
+    """Обработчик события повышения уровня"""
+    # TODO: Реализуйте обработчик
+    pass
+
+def experience_gained_handler(event_type: str, data: dict):
+    """Обработчик события получения опыта"""
+    # TODO: Реализуйте обработчик
+    pass
+
+def health_changed_handler(event_type: str, data: dict):
+    """Обработчик события изменения здоровья"""
+    # TODO: Реализуйте обработчик
+    pass
+
+
+# Уровень 3 - Повышенный
+# Задание 3.1: Реализовать систему уведомлений с фильтрацией
+
+from enum import Enum
+
+class GameEventType(Enum):
+    """Типы игровых событий"""
+    PLAYER_DAMAGE_TAKEN = "player_damage_taken"
+    ENEMY_DEFEATED = "enemy_defeated"
+    LEVEL_UP = "level_up"
+    TREASURE_FOUND = "treasure_found"
+    QUEST_COMPLETED = "quest_completed"
+    HEALTH_CHANGED = "health_changed"
+    MANA_CHANGED = "mana_changed"
+    ITEM_ACQUIRED = "item_acquired"
+    SKILL_UNLOCKED = "skill_unlocked"
+
+
+class Event:
+    """Класс события"""
+    def __init__(self, event_type, source=None, data: dict = None):
+        # TODO: Реализуйте инициализацию события
+        pass
+
+
+class EventSubscriber(ABC):
+    """Абстрактный класс подписчика на события"""
+    def __init__(self, name: str):
+        self.name = name
+
+    @abstractmethod
+    def handle_event(self, event):
+        """Обработать событие"""
+        pass
+
+    def can_handle_event(self, event_type) -> bool:
+        """Проверить, может ли подписчик обрабатывать событие данного типа"""
+        # TODO: Реализуйте проверку возможности обработки события
+        return True
+
+
+class HealthBarObserver(EventSubscriber):
+    """Наблюдатель за изменением здоровья"""
+    def handle_event(self, event):
+        # TODO: Реализуйте обработку событий изменения здоровья
+        pass
+
+
+class AchievementObserver(EventSubscriber):
+    """Наблюдатель за достижениями"""
+    def __init__(self, name: str):
+        super().__init__(name)
+        # TODO: Инициализируйте счетчики для отслеживания достижений
+        pass
+
+    def handle_event(self, event):
+        # TODO: Реализуйте обработку событий для отслеживания достижений
+        pass
+
+
+class NotificationObserver(EventSubscriber):
+    """Наблюдатель для отправки уведомлений"""
+    def handle_event(self, event):
+        # TODO: Реализуйте обработку событий для отправки уведомлений
+        pass
+
+
+class EventPublisher:
+    """Публикатор событий с фильтрацией"""
+    def __init__(self):
+        # TODO: Инициализируйте хранилище подписчиков
+        pass
+
+    def subscribe(self, subscriber, event_types=None):
+        """Подписаться на определенные типы событий"""
+        # TODO: Реализуйте добавление подписчика
+        pass
+
+    def unsubscribe(self, subscriber, event_type=None):
+        """Отписаться от событий"""
+        # TODO: Реализуйте удаление подписчика
+        pass
+
+    def publish(self, event):
+        """Опубликовать событие"""
+        # TODO: Реализуйте публикацию события и уведомление подписчиков
+        pass
+
+
+# Задание 3.2: Практическое применение Observer в игровой системе
+
+class PlayerProfile(Subject):
+    """
+    Профиль игрока как наблюдаемый объект
+    """
+    def __init__(self, username: str, level: int = 1):
         super().__init__()
-        self.currency = currency
-        self.rate = rate
-    
-    async def set_rate(self, new_rate: float):
-        """Асинхронно установить новый курс"""
-        old_rate = self.rate
-        self.rate = new_rate
-        print(f"Асинхронное изменение курса {self.currency} с {old_rate} на {new_rate}")
-        await self.notify_async(old_rate=old_rate, new_rate=new_rate)
+        # TODO: Инициализируйте атрибуты профиля игрока
+        pass
 
-class AsyncEmailNotifier(AsyncObserver):
-    """Асинхронный наблюдатель для email-уведомлений"""
-    def __init__(self, email: str):
-        self.email = email
-    
-    async def update_async(self, subject, *args, **kwargs):
-        # Имитация асинхронной операции отправки email
-        await asyncio.sleep(0.1)
-        if isinstance(subject, AsyncCurrencyRate):
-            old_rate = kwargs.get('old_rate')
-            new_rate = kwargs.get('new_rate')
-            print(f"ASYNC EMAIL NOTIFICATION для {self.email}: Курс {subject.currency} изменился с {old_rate} на {new_rate}")
+    @property
+    def level(self):
+        # TODO: Реализуйте геттер уровня
+        pass
 
-# Задание 5: Практическое применение
-class UserProfile(Subject):
-    """Профиль пользователя как наблюдаемый объект"""
-    def __init__(self, username: str):
-        super().__init__()
-        self.username = username
-        self.status = ""
-        self.friends_count = 0
-    
-    def update_status(self, new_status: str):
-        """Обновить статус пользователя"""
-        old_status = self.status
-        self.status = new_status
-        print(f"{self.username} обновил статус: {new_status}")
-        self.notify(event_type="status_update", old_status=old_status, new_status=new_status)
-    
-    def add_friend(self):
-        """Добавить друга"""
-        old_count = self.friends_count
-        self.friends_count += 1
-        print(f"{self.username} теперь имеет {self.friends_count} друзей")
-        self.notify(event_type="friend_added", old_count=old_count, new_count=self.friends_count)
+    @level.setter
+    def level(self, value: int):
+        # TODO: Реализуйте сеттер уровня с уведомлением
+        pass
+
+    @property
+    def health(self):
+        # TODO: Реализуйте геттер здоровья
+        pass
+
+    @health.setter
+    def health(self, value: int):
+        # TODO: Реализуйте сеттер здоровья с уведомлением
+        pass
+
+    @property
+    def gold(self):
+        # TODO: Реализуйте геттер золота
+        pass
+
+    @gold.setter
+    def gold(self, value: int):
+        # TODO: Реализуйте сеттер золота с уведомлением
+        pass
+
+    @property
+    def online_status(self):
+        # TODO: Реализуйте геттер статуса
+        pass
+
+    @online_status.setter
+    def online_status(self, status: str):
+        # TODO: Реализуйте сеттер статуса с уведомлением
+        pass
+
+    def add_experience(self, exp: int):
+        """Добавить опыт и возможно повысить уровень"""
+        # TODO: Реализуйте добавление опыта с уведомлением
+        pass
+
+    def level_up(self):
+        """Повысить уровень"""
+        # TODO: Реализуйте повышение уровня
+        pass
+
+    def unlock_achievement(self, achievement_name: str):
+        """Разблокировать достижение"""
+        # TODO: Реализуйте разблокировку достижения с уведомлением
+        pass
+
 
 class FriendNotifier(Observer):
-    """Наблюдатель для уведомления друзей"""
-    def __init__(self, friend_name: str):
-        self.friend_name = friend_name
-    
-    def update(self, subject, *args, **kwargs):
-        if isinstance(subject, UserProfile):
-            event_type = kwargs.get('event_type')
-            if event_type == "status_update":
-                new_status = kwargs.get('new_status')
-                print(f"{self.friend_name}: Ваш друг {subject.username} обновил статус: {new_status}")
-            elif event_type == "friend_added":
-                print(f"{self.friend_name}: {subject.username} добавил нового друга!")
+    """
+    Наблюдатель для уведомления друзей о действиях игрока
+    """
+    def __init__(self, friend_list: List[str]):
+        # TODO: Инициализируйте список друзей
+        pass
+
+    def update(self, event_type: str, data: dict = None):
+        # TODO: Реализуйте обработку событий для уведомления друзей
+        pass
+
 
 class FeedUpdater(Observer):
-    """Наблюдатель для обновления ленты"""
-    def update(self, subject, *args, **kwargs):
-        if isinstance(subject, UserProfile):
-            event_type = kwargs.get('event_type')
-            if event_type == "status_update":
-                new_status = kwargs.get('new_status')
-                print(f"FEED: Новый статус от {subject.username}: {new_status}")
-            elif event_type == "friend_added":
-                print(f"FEED: {subject.username} добавил нового друга!")
+    """
+    Наблюдатель для обновления ленты новостей
+    """
+    def __init__(self):
+        # TODO: Инициализируйте ленту новостей
+        pass
 
-# Примеры использования:
-if __name__ == "__main__":
-    print("=== Задание 1: Базовая реализация Observer ===")
-    currency = CurrencyRate("USD", 75.5)
-    
-    email_notifier1 = EmailNotifier("user1@example.com")
-    email_notifier2 = EmailNotifier("user2@example.com")
-    sms_notifier = SMSNotifier("+79991234567")
-    
-    currency.attach(email_notifier1)
-    currency.attach(email_notifier2)
-    currency.attach(sms_notifier)
-    
-    currency.set_rate(76.0)
-    print()
-    
-    # Отписываем одного наблюдателя
-    currency.detach(email_notifier2)
-    currency.set_rate(75.8)
-    print()
-    
-    print("=== Задание 2: Использование встроенных средств ===")
-    event_manager = EventManager()
-    
-    def log_event(event_type, data):
-        print(f"ЛОГ: Событие '{event_type}' с данными: {data}")
-    
-    def send_alert(event_type, data):
-        print(f"ТРЕВОГА: Произошло событие '{event_type}'!")
-    
-    event_manager.subscribe("warning", log_event)
-    event_manager.subscribe("error", log_event)
-    event_manager.subscribe("error", send_alert)
-    
-    event_manager.emit("warning", {"message": "Предупреждение"})
-    event_manager.emit("error", {"message": "Ошибка", "code": 500})
-    print()
-    
-    print("=== Задание 3: Параметризованные уведомления ===")
-    publisher = EventPublisher()
-    
-    subscriber1 = EventSubscriber("Subscriber1")
-    subscriber2 = EventSubscriber("Subscriber2")
-    
-    publisher.subscribe("news", subscriber1.handle_event)
-    publisher.subscribe("news", subscriber2.handle_event)
-    publisher.subscribe("alerts", subscriber2.handle_event)
-    
-    publisher.publish("news", {"title": "Новость дня", "content": "Содержимое новости"})
-    publisher.publish("alerts", {"priority": "high", "message": "Важное уведомление"})
-    print()
-    
-    print("=== Задание 4: Асинхронный Observer ===")
-    async def async_demo():
-        async_currency = AsyncCurrencyRate("EUR", 85.0)
-        
-        async_email1 = AsyncEmailNotifier("async_user1@example.com")
-        async_email2 = AsyncEmailNotifier("async_user2@example.com")
-        
-        async_currency.attach_async(async_email1)
-        async_currency.attach_async(async_email2)
-        
-        await async_currency.set_rate(86.5)
-    
-    # Запускаем асинхронный пример
-    asyncio.run(async_demo())
-    print()
-    
-    print("=== Задание 5: Практическое применение ===")
-    user = UserProfile("Alex")
-    
-    friend1 = FriendNotifier("Bob")
-    friend2 = FriendNotifier("Charlie")
-    feed_updater = FeedUpdater()
-    
-    user.attach(friend1)
-    user.attach(friend2)
-    user.attach(feed_updater)
-    
-    user.update_status("Впервые на этой платформе!")
-    user.add_friend()
-    user.update_status("Изучаю паттерн Observer")
+    def update(self, event_type: str, data: dict = None):
+        # TODO: Реализуйте обновление ленты новостей
+        pass
+
+    def get_recent_posts(self, count: int = 5) -> List[str]:
+        """Получить последние записи из ленты"""
+        # TODO: Реализуйте получение последних записей
+        pass
+
+
+class NotificationService(Observer):
+    """
+    Сервис уведомлений для игрока
+    """
+    def __init__(self, player_username: str):
+        # TODO: Инициализируйте сервис уведомлений
+        pass
+
+    def update(self, event_type: str, data: dict = None):
+        # TODO: Реализуйте обработку событий для уведомлений
+        pass
+
+    def get_unread_notifications(self) -> List[str]:
+        """Получить непрочитанные уведомления"""
+        # TODO: Реализуйте получение непрочитанных уведомлений
+        pass
+
+
+# Тестирование реализации (раскомментируйте после реализации)
+"""
+# Тестирование уровня 1
+player = Player("Артур", health=100)
+enemy = Enemy("Гоблин", health=50, attack_power=10)
+
+print(f"Игрок: {player.get_info()}")
+print(f"Враг: {enemy.name}, здоровье: {enemy.health}")
+
+# Наносим урон игроку
+player.take_damage(30)
+
+# Наносим урон врагу
+enemy.take_damage(25)
+
+# Игрок получает опыт
+player.gain_experience(150)
+
+print(f"\nПосле изменений:")
+print(f"Игрок: {player.get_info()}")
+print(f"Враг: {enemy.name}, здоровье: {enemy.health}, жив: {enemy.is_alive}")
+
+# Тестирование уровня 2
+event_manager = EventManager()
+
+# Подписываем обработчики на события
+event_manager.subscribe("player_damaged", player_damaged_handler)
+event_manager.subscribe("enemy_died", enemy_defeated_handler)
+event_manager.subscribe("player_leveled_up", level_up_handler)
+event_manager.subscribe("player_gained_experience", experience_gained_handler)
+event_manager.subscribe("player_health_changed", health_changed_handler)
+event_manager.subscribe("enemy_health_changed", health_changed_handler)
+
+# Тестирование уровня 3
+publisher = EventPublisher()
+
+# Создаем подписчиков
+health_bar = HealthBarObserver("HealthBar")
+achievements = AchievementObserver("Player")
+notifications = NotificationObserver("SystemNotifier")
+
+# Подписываем на определенные события
+publisher.subscribe(health_bar, [GameEventType.HEALTH_CHANGED, GameEventType.PLAYER_DAMAGE_TAKEN])
+publisher.subscribe(achievements, [GameEventType.PLAYER_DAMAGE_TAKEN, GameEventType.ENEMY_DEFEATED, GameEventType.TREASURE_FOUND])
+publisher.subscribe(notifications, [GameEventType.LEVEL_UP, GameEventType.TREASURE_FOUND, GameEventType.QUEST_COMPLETED, GameEventType.SKILL_UNLOCKED])
+
+# Создаем игрока
+player = Player("Артур", health=100)
+
+# Публикуем различные события
+print("=== Публикация событий ===")
+
+# Событие получения урона
+damage_event = Event(GameEventType.PLAYER_DAMAGE_TAKEN, player, {"damage_amount": 25, "current_health": 75})
+publisher.publish(damage_event)
+
+# Событие повышения уровня
+level_up_event = Event(GameEventType.LEVEL_UP, player, {"new_level": 2})
+publisher.publish(level_up_event)
+
+# Событие нахождения сокровища
+treasure_event = Event(GameEventType.TREASURE_FOUND, player, {"item_name": "Меч короля"})
+publisher.publish(treasure_event)
+
+# Событие уничтожения врага
+enemy = Enemy("Гоблин", health=50, attack_power=10)
+enemy_defeated_event = Event(GameEventType.ENEMY_DEFEATED, enemy)
+publisher.publish(enemy_defeated_event)
+
+# Событие изменения здоровья
+health_change_event = Event(GameEventType.HEALTH_CHANGED, player, {"current_health": 80, "max_health": 100})
+publisher.publish(health_change_event)
+
+print("\n=== Статистика достижений ===")
+print(f"Нанесено урона: {achievements.damage_dealt}")
+print(f"Повержено врагов: {achievements.enemies_defeated}")
+print(f"Найдено сокровищ: {achievements.treasures_found}")
+"""

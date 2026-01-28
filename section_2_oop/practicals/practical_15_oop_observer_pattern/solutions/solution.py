@@ -1,0 +1,722 @@
+"""
+Решение для практического задания 15: Паттерн Observer в игровом контексте
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Dict, Callable
+import time
+
+# Уровень 1 - Начальный
+# Задание 1.1: Создать базовую реализацию Observer для игровых событий
+
+class Observer(ABC):
+    """
+    Интерфейс наблюдателя для получения уведомлений об игровых событиях
+    """
+    @abstractmethod
+    def update(self, event_type: str, data: dict = None):
+        """
+        Метод для получения уведомления об изменении
+        """
+        pass
+
+class Subject(ABC):
+    """
+    Интерфейс субъекта, за которым могут наблюдать наблюдатели
+    """
+    def __init__(self):
+        self._observers: List[Observer] = []
+
+    def attach(self, observer: Observer):
+        """Подписаться на уведомления"""
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def detach(self, observer: Observer):
+        """Отписаться от уведомлений"""
+        if observer in self._observers:
+            self._observers.remove(observer)
+
+    def notify(self, event_type: str, data: dict = None):
+        """Уведомить всех наблюдателей об изменении"""
+        for observer in self._observers:
+            observer.update(event_type, data)
+
+
+class Player(Subject):
+    """
+    Класс игрока, за которым могут наблюдать другие объекты
+    """
+    def __init__(self, name: str, health: int = 100):
+        super().__init__()
+        self.name = name
+        self._health = health
+        self._max_health = health
+        self._level = 1
+        self._experience = 0
+        self.is_alive = True
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        old_health = self._health
+        self._health = max(0, min(self._max_health, value))
+        if self._health <= 0:
+            self._health = 0
+            self.is_alive = False
+            # Уведомляем наблюдателей о смерти игрока
+            self.notify("player_died", {"player": self, "old_health": old_health, "new_health": self._health})
+        elif old_health != self._health:
+            # Уведомляем наблюдателей об изменении здоровья
+            self.notify("player_health_changed", {"player": self, "old_health": old_health, "new_health": self._health})
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value: int):
+        old_level = self._level
+        self._level = value
+        if self._level > old_level:
+            # Уведомляем наблюдателей о повышении уровня
+            self.notify("player_leveled_up", {"player": self, "old_level": old_level, "new_level": self._level})
+
+    def take_damage(self, damage: int):
+        """Получить урон"""
+        self.health -= damage
+        self.notify("player_damaged", {"player": self, "damage_amount": damage})
+
+    def gain_experience(self, exp: int):
+        """Получить опыт"""
+        self._experience += exp
+        self.notify("player_gained_experience", {"player": self, "exp_gained": exp, "total_exp": self._experience})
+        # Проверяем, не пора ли повысить уровень
+        required_exp = self._level * 100  # Упрощенная формула
+        if self._experience >= required_exp:
+            self.level_up()
+
+    def level_up(self):
+        """Повысить уровень игрока"""
+        self._experience = 0  # Сбрасываем опыт при повышении уровня
+        self._level += 1
+        self._max_health += 20  # Увеличиваем максимальное здоровье
+        self.health = self._max_health  # Полностью восстанавливаем здоровье
+        self.level = self._level  # Вызываем сеттер для уведомления
+
+    def get_info(self):
+        return f"{self.name}: Lvl.{self._level}, HP {self._health}/{self._max_health}, EXP {self._experience}"
+
+
+class Enemy(Subject):
+    """
+    Класс врага, за которым могут наблюдать другие объекты
+    """
+    def __init__(self, name: str, health: int, attack_power: int):
+        super().__init__()
+        self.name = name
+        self._health = health
+        self._max_health = health
+        self.attack_power = attack_power
+        self.is_alive = True
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        old_health = self._health
+        self._health = max(0, min(self._max_health, value))
+        if self._health <= 0:
+            self._health = 0
+            self.is_alive = False
+            # Уведомляем наблюдателей о смерти врага
+            self.notify("enemy_died", {"enemy": self, "old_health": old_health, "new_health": self._health})
+        elif old_health != self._health:
+            # Уведомляем наблюдателей об изменении здоровья
+            self.notify("enemy_health_changed", {"enemy": self, "old_health": old_health, "new_health": self._health})
+
+    def take_damage(self, damage: int):
+        """Получить урон"""
+        self.health -= damage
+        self.notify("enemy_damaged", {"enemy": self, "damage_amount": damage})
+
+
+# Уровень 2 - Средний
+# Задание 2.1: Реализовать систему уведомлений с использованием callback-функций
+
+class EventManager:
+    """
+    Менеджер событий для управления игровыми событиями
+    """
+    def __init__(self):
+        self._event_handlers: Dict[str, List[Callable]] = {}
+
+    def subscribe(self, event_type: str, handler):
+        """Подписаться на событие определенного типа"""
+        if event_type not in self._event_handlers:
+            self._event_handlers[event_type] = []
+        if handler not in self._event_handlers[event_type]:
+            self._event_handlers[event_type].append(handler)
+
+    def unsubscribe(self, event_type: str, handler):
+        """Отписаться от события определенного типа"""
+        if event_type in self._event_handlers:
+            if handler in self._event_handlers[event_type]:
+                self._event_handlers[event_type].remove(handler)
+                # Удаляем тип события, если больше нет обработчиков
+                if not self._event_handlers[event_type]:
+                    del self._event_handlers[event_type]
+
+    def trigger_event(self, event_type: str, data: dict = None):
+        """Вызвать событие и уведомить всех подписчиков"""
+        if event_type in self._event_handlers:
+            # Создаем копию списка обработчиков на случай, если он изменится во время вызова
+            handlers_copy = self._event_handlers[event_type].copy()
+            for handler in handlers_copy:
+                try:
+                    handler(event_type, data)
+                except Exception as e:
+                    print(f"Ошибка при обработке события {event_type}: {e}")
+
+    def get_subscribers_count(self, event_type: str) -> int:
+        """Получить количество подписчиков на событие"""
+        return len(self._event_handlers.get(event_type, []))
+
+
+# Примеры обработчиков событий
+def player_damaged_handler(event_type: str, data: dict):
+    """Обработчик события получения урона игроком"""
+    if data and "player" in data and "damage_amount" in data:
+        print(f"🛡️ Игрок {data['player'].name} получил {data['damage_amount']} урона!")
+        if data['player'].health < data['player'].max_health * 0.3:
+            print(f"⚠️ {data['player'].name} находится в опасности!")
+
+def enemy_defeated_handler(event_type: str, data: dict):
+    """Обработчик события уничтожения врага"""
+    if data and "enemy" in data:
+        print(f"💀 Враг {data['enemy'].name} повержен!")
+
+def level_up_handler(event_type: str, data: dict):
+    """Обработчик события повышения уровня"""
+    if data and "player" in data and "new_level" in data:
+        print(f"🎉 {data['player'].name} достиг {data['new_level']} уровня!")
+
+def experience_gained_handler(event_type: str, data: dict):
+    """Обработчик события получения опыта"""
+    if data and "player" in data and "exp_gained" in data:
+        print(f"⭐ {data['player'].name} получил {data['exp_gained']} опыта!")
+
+def health_changed_handler(event_type: str, data: dict):
+    """Обработчик события изменения здоровья"""
+    if data and "old_health" in data and "new_health" in data:
+        entity = data.get("player") or data.get("enemy")
+        if entity:
+            change = data["new_health"] - data["old_health"]
+            action = "восстановил" if change > 0 else "потерял"
+            print(f"❤️ {entity.name} {action} {abs(change)} здоровья. Теперь: {data['new_health']}")
+
+
+# Уровень 3 - Повышенный
+# Задание 3.1: Реализовать систему уведомлений с фильтрацией
+
+from enum import Enum
+
+class GameEventType(Enum):
+    """Типы игровых событий"""
+    PLAYER_DAMAGE_TAKEN = "player_damage_taken"
+    ENEMY_DEFEATED = "enemy_defeated"
+    LEVEL_UP = "level_up"
+    TREASURE_FOUND = "treasure_found"
+    QUEST_COMPLETED = "quest_completed"
+    HEALTH_CHANGED = "health_changed"
+    MANA_CHANGED = "mana_changed"
+    ITEM_ACQUIRED = "item_acquired"
+    SKILL_UNLOCKED = "skill_unlocked"
+
+
+class Event:
+    """Класс события"""
+    def __init__(self, event_type, source=None, data: dict = None):
+        self.type = event_type
+        self.source = source
+        self.data = data or {}
+        self.timestamp = time.time()
+
+
+class EventSubscriber(ABC):
+    """Абстрактный класс подписчика на события"""
+    def __init__(self, name: str):
+        self.name = name
+
+    @abstractmethod
+    def handle_event(self, event):
+        """Обработать событие"""
+        pass
+
+    def can_handle_event(self, event_type) -> bool:
+        """Проверить, может ли подписчик обрабатывать событие данного типа"""
+        return True
+
+
+class HealthBarObserver(EventSubscriber):
+    """Наблюдатель за изменением здоровья"""
+    def handle_event(self, event):
+        if event.type in [GameEventType.HEALTH_CHANGED, GameEventType.PLAYER_DAMAGE_TAKEN]:
+            entity = event.data.get("entity") or event.source
+            if entity:
+                health = event.data.get("current_health", getattr(entity, 'health', 'N/A'))
+                max_health = event.data.get("max_health", getattr(entity, 'max_health', 'N/A'))
+                print(f"[HEALTH_BAR] {entity.name if hasattr(entity, 'name') else 'Entity'}: {health}/{max_health} HP")
+
+
+class AchievementObserver(EventSubscriber):
+    """Наблюдатель за достижениями"""
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.damage_dealt = 0
+        self.enemies_defeated = 0
+        self.treasures_found = 0
+
+    def handle_event(self, event):
+        if event.type == GameEventType.PLAYER_DAMAGE_TAKEN:
+            damage = event.data.get("damage_amount", 0)
+            self.damage_dealt += damage
+            if self.damage_dealt >= 1000:
+                print(f"[ACHIEVEMENT] '{self.name}' получил достижение: 'Разрушитель'!")
+        elif event.type == GameEventType.ENEMY_DEFEATED:
+            self.enemies_defeated += 1
+            if self.enemies_defeated >= 10:
+                print(f"[ACHIEVEMENT] '{self.name}' получил достижение: 'Охотник за монстрами'!")
+        elif event.type == GameEventType.TREASURE_FOUND:
+            self.treasures_found += 1
+            if self.treasures_found >= 5:
+                print(f"[ACHIEVEMENT] '{self.name}' получил достижение: 'Искатель сокровищ'!")
+
+
+class NotificationObserver(EventSubscriber):
+    """Наблюдатель для отправки уведомлений"""
+    def handle_event(self, event):
+        notifications = {
+            GameEventType.LEVEL_UP: f"🎉 Поздравляем! {event.source.name if hasattr(event.source, 'name') else 'Игрок'} достиг нового уровня!",
+            GameEventType.TREASURE_FOUND: f"💎 Найдено сокровище: {event.data.get('item_name', 'неизвестный предмет')}!",
+            GameEventType.QUEST_COMPLETED: f"✅ Квест '{event.data.get('quest_name', 'неизвестный')}' завершен!",
+            GameEventType.SKILL_UNLOCKED: f"🔮 Новый навык разблокирован: {event.data.get('skill_name', 'неизвестный навык')}!"
+        }
+
+        if event.type in notifications:
+            print(f"[NOTIFICATION] {notifications[event.type]}")
+
+
+class EventPublisher:
+    """Публикатор событий с фильтрацией"""
+    def __init__(self):
+        self._subscribers: Dict[GameEventType, List[EventSubscriber]] = {}
+        self._global_subscribers: List[EventSubscriber] = []  # Подписчики на все события
+
+    def subscribe(self, subscriber, event_types=None):
+        """Подписаться на определенные типы событий"""
+        if event_types is None:
+            # Подписываемся на все события
+            self._global_subscribers.append(subscriber)
+        else:
+            # Подписываемся на определенные типы событий
+            for event_type in event_types:
+                if event_type not in self._subscribers:
+                    self._subscribers[event_type] = []
+                if subscriber not in self._subscribers[event_type]:
+                    self._subscribers[event_type].append(subscriber)
+
+    def unsubscribe(self, subscriber, event_type=None):
+        """Отписаться от событий"""
+        if event_type is None:
+            # Отписываемся от всех событий
+            if subscriber in self._global_subscribers:
+                self._global_subscribers.remove(subscriber)
+            for subscribers_list in self._subscribers.values():
+                if subscriber in subscribers_list:
+                    subscribers_list.remove(subscriber)
+        else:
+            # Отписываемся от определенного типа событий
+            if event_type in self._subscribers and subscriber in self._subscribers[event_type]:
+                self._subscribers[event_type].remove(subscriber)
+
+    def publish(self, event):
+        """Опубликовать событие"""
+        # Уведомляем глобальных подписчиков
+        for subscriber in self._global_subscribers:
+            if subscriber.can_handle_event(event.type):
+                subscriber.handle_event(event)
+
+        # Уведомляем подписчиков на конкретный тип события
+        if event.type in self._subscribers:
+            for subscriber in self._subscribers[event.type]:
+                if subscriber.can_handle_event(event.type):
+                    subscriber.handle_event(event)
+
+
+# Задание 3.2: Практическое применение Observer в игровой системе
+
+class PlayerProfile(Subject):
+    """
+    Профиль игрока как наблюдаемый объект
+    """
+    def __init__(self, username: str, level: int = 1):
+        super().__init__()
+        self.username = username
+        self._level = level
+        self._health = 100
+        self._max_health = 100
+        self._experience = 0
+        self._gold = 0
+        self._achievements = []
+        self._online_status = "offline"
+        self._last_action = None
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value: int):
+        old_level = self._level
+        self._level = value
+        if self._level > old_level:
+            self._last_action = f"Достиг уровня {self._level}"
+            self.notify("player_level_up", {"profile": self, "old_level": old_level, "new_level": self._level})
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        old_health = self._health
+        self._health = max(0, min(self._max_health, value))
+        if old_health != self._health:
+            action = "восстановил" if self._health > old_health else "потерял"
+            change = abs(self._health - old_health)
+            self._last_action = f"{action} {change} здоровья"
+            self.notify("player_health_change", {
+                "profile": self, 
+                "old_health": old_health, 
+                "new_health": self._health,
+                "change": change,
+                "action": action
+            })
+
+    @property
+    def gold(self):
+        return self._gold
+
+    @gold.setter
+    def gold(self, value: int):
+        old_gold = self._gold
+        self._gold = max(0, value)
+        if old_gold != self._gold:
+            action = "получил" if self._gold > old_gold else "потратил"
+            change = abs(self._gold - old_gold)
+            self._last_action = f"{action} {change} золота"
+            self.notify("player_gold_change", {
+                "profile": self, 
+                "old_gold": old_gold, 
+                "new_gold": self._gold,
+                "change": change,
+                "action": action
+            })
+
+    @property
+    def online_status(self):
+        return self._online_status
+
+    @online_status.setter
+    def online_status(self, status: str):
+        old_status = self._online_status
+        self._online_status = status
+        if old_status != self._online_status:
+            self._last_action = f"изменил статус на {status}"
+            self.notify("player_status_change", {
+                "profile": self, 
+                "old_status": old_status, 
+                "new_status": status
+            })
+
+    def add_experience(self, exp: int):
+        """Добавить опыт и возможно повысить уровень"""
+        self._experience += exp
+        self._last_action = f"получил {exp} опыта"
+        self.notify("player_experience_gain", {"profile": self, "exp_gained": exp, "total_exp": self._experience})
+        # Проверяем, не пора ли повысить уровень
+        required_exp = self._level * 100
+        if self._experience >= required_exp:
+            self.level_up()
+
+    def level_up(self):
+        """Повысить уровень"""
+        self._experience = 0
+        self._level += 1
+        self._max_health += 20
+        self.health = self._max_health  # Полное восстановление при уровне
+        self.level = self._level
+
+    def unlock_achievement(self, achievement_name: str):
+        """Разблокировать достижение"""
+        if achievement_name not in self._achievements:
+            self._achievements.append(achievement_name)
+            self._last_action = f"разблокировал достижение '{achievement_name}'"
+            self.notify("achievement_unlocked", {"profile": self, "achievement": achievement_name})
+
+
+class FriendNotifier(Observer):
+    """
+    Наблюдатель для уведомления друзей о действиях игрока
+    """
+    def __init__(self, friend_list: List[str]):
+        self.friend_list = friend_list
+
+    def update(self, event_type: str, data: dict = None):
+        if event_type in ["player_level_up", "achievement_unlocked", "player_status_change"]:
+            profile = data.get("profile") if data else None
+            if profile:
+                if event_type == "player_level_up":
+                    new_level = data.get("new_level", "N/A")
+                    print(f"[FRIEND_NOTIFIER] Друзьям {profile.username} отправлено уведомление: 'Ура! {profile.username} достиг {new_level} уровня!'")
+                elif event_type == "achievement_unlocked":
+                    achievement = data.get("achievement", "N/A")
+                    print(f"[FRIEND_NOTIFIER] Друзьям {profile.username} отправлено уведомление: '{profile.username} разблокировал достижение {achievement}!'")
+                elif event_type == "player_status_change":
+                    new_status = data.get("new_status", "N/A")
+                    print(f"[FRIEND_NOTIFIER] Друзьям {profile.username} отправлено уведомление: '{profile.username} теперь {new_status}'")
+
+
+class FeedUpdater(Observer):
+    """
+    Наблюдатель для обновления ленты новостей
+    """
+    def __init__(self):
+        self.feed = []
+
+    def update(self, event_type: str, data: dict = None):
+        profile = data.get("profile") if data else None
+        if profile:
+            if event_type == "player_level_up":
+                new_level = data.get("new_level", "N/A")
+                feed_entry = f"{profile.username} достиг {new_level} уровня! 🎉"
+            elif event_type == "achievement_unlocked":
+                achievement = data.get("achievement", "N/A")
+                feed_entry = f"{profile.username} разблокировал достижение: {achievement}! 🏆"
+            elif event_type == "player_status_change":
+                new_status = data.get("new_status", "N/A")
+                feed_entry = f"{profile.username} теперь {new_status} 💬"
+            elif event_type == "player_experience_gain":
+                exp_gained = data.get("exp_gained", "N/A")
+                feed_entry = f"{profile.username} получил {exp_gained} опыта! ⭐"
+            elif event_type == "player_gold_change":
+                action = data.get("action", "")
+                change = data.get("change", "")
+                feed_entry = f"{profile.username} {action} {change} золота! 💰"
+            else:
+                return  # Для других событий не добавляем в ленту
+
+            self.feed.append(feed_entry)
+            print(f"[FEED_UPDATER] Новая запись в ленте: {feed_entry}")
+
+    def get_recent_posts(self, count: int = 5) -> List[str]:
+        """Получить последние записи из ленты"""
+        return self.feed[-count:] if count > 0 else []
+
+
+class NotificationService(Observer):
+    """
+    Сервис уведомлений для игрока
+    """
+    def __init__(self, player_username: str):
+        self.player_username = player_username
+        self.notifications = []
+
+    def update(self, event_type: str, data: dict = None):
+        profile = data.get("profile") if data else None
+        if profile and profile.username != self.player_username:
+            # Этот сервис уведомлений только для других игроков
+            return
+
+        if event_type in ["player_level_up", "achievement_unlocked", "player_experience_gain", "player_gold_change"]:
+            if event_type == "player_level_up":
+                new_level = data.get("new_level", "N/A")
+                notification = f"Поздравляем! Вы достигли {new_level} уровня!"
+            elif event_type == "achievement_unlocked":
+                achievement = data.get("achievement", "N/A")
+                notification = f"Вы разблокировали достижение: {achievement}!"
+            elif event_type == "player_experience_gain":
+                exp_gained = data.get("exp_gained", "N/A")
+                notification = f"Вы получили {exp_gained} опыта!"
+            elif event_type == "player_gold_change":
+                action = data.get("action", "")
+                change = data.get("change", "")
+                notification = f"Вы {action} {change} золота!"
+            else:
+                return
+
+            self.notifications.append(notification)
+            print(f"[NOTIFICATION_SERVICE] Уведомление для {self.player_username}: {notification}")
+
+    def get_unread_notifications(self) -> List[str]:
+        """Получить непрочитанные уведомления"""
+        return self.notifications.copy()
+
+
+# Демонстрация работы всех уровней
+if __name__ == "__main__":
+    print("=== Демонстрация паттерна Observer ===\n")
+
+    # Тестирование уровня 1
+    print("--- Уровень 1: Базовая реализация Observer ---")
+    player = Player("Артур", health=100)
+    enemy = Enemy("Гоблин", health=50, attack_power=10)
+
+    print(f"Игрок: {player.get_info()}")
+    print(f"Враг: {enemy.name}, здоровье: {enemy.health}")
+
+    # Наносим урон игроку
+    player.take_damage(30)
+
+    # Наносим урон врагу
+    enemy.take_damage(25)
+
+    # Игрок получает опыт
+    player.gain_experience(150)
+
+    print(f"\nПосле изменений:")
+    print(f"Игрок: {player.get_info()}")
+    print(f"Враг: {enemy.name}, здоровье: {enemy.health}, жив: {enemy.is_alive}")
+    print()
+
+    # Тестирование уровня 2
+    print("--- Уровень 2: Система уведомлений с callback-функциями ---")
+    event_manager = EventManager()
+
+    # Подписываем обработчики на события
+    event_manager.subscribe("player_damaged", player_damaged_handler)
+    event_manager.subscribe("enemy_died", enemy_defeated_handler)
+    event_manager.subscribe("player_leveled_up", level_up_handler)
+    event_manager.subscribe("player_gained_experience", experience_gained_handler)
+    event_manager.subscribe("player_health_changed", health_changed_handler)
+    event_manager.subscribe("enemy_health_changed", health_changed_handler)
+
+    # Создаем нового игрока и врага для тестирования EventManager
+    player2 = Player("Борис", health=100)
+    enemy2 = Enemy("Орк", health=60, attack_power=12)
+
+    print(f"Игрок: {player2.get_info()}")
+    print(f"Враг: {enemy2.name}, здоровье: {enemy2.health}")
+
+    # Вызываем события через EventManager
+    print("\n--- События через EventManager ---")
+    event_manager.trigger_event("player_gained_experience", {"player": player2, "exp_gained": 50})
+    player2.take_damage(30)  # Это вызовет событие через сеттер здоровья
+    enemy2.take_damage(60)   # Это вызовет событие через сеттер здоровья
+
+    print(f"\nПосле событий:")
+    print(f"Игрок: {player2.get_info()}")
+    print(f"Враг жив: {enemy2.is_alive}")
+    print()
+
+    # Тестирование уровня 3
+    print("--- Уровень 3: Система уведомлений с фильтрацией ---")
+    publisher = EventPublisher()
+
+    # Создаем подписчиков
+    health_bar = HealthBarObserver("HealthBar")
+    achievements = AchievementObserver("Player")
+    notifications = NotificationObserver("SystemNotifier")
+
+    # Подписываем на определенные события
+    publisher.subscribe(health_bar, [GameEventType.HEALTH_CHANGED, GameEventType.PLAYER_DAMAGE_TAKEN])
+    publisher.subscribe(achievements, [GameEventType.PLAYER_DAMAGE_TAKEN, GameEventType.ENEMY_DEFEATED, GameEventType.TREASURE_FOUND])
+    publisher.subscribe(notifications, [GameEventType.LEVEL_UP, GameEventType.TREASURE_FOUND, GameEventType.QUEST_COMPLETED, GameEventType.SKILL_UNLOCKED])
+
+    # Создаем игрока
+    player3 = Player("Елена", health=100)
+
+    # Публикуем различные события
+    print("=== Публикация событий ===")
+
+    # Событие получения урона
+    damage_event = Event(GameEventType.PLAYER_DAMAGE_TAKEN, player3, {"damage_amount": 25, "current_health": 75})
+    publisher.publish(damage_event)
+
+    # Событие повышения уровня
+    level_up_event = Event(GameEventType.LEVEL_UP, player3, {"new_level": 2})
+    publisher.publish(level_up_event)
+
+    # Событие нахождения сокровища
+    treasure_event = Event(GameEventType.TREASURE_FOUND, player3, {"item_name": "Меч короля"})
+    publisher.publish(treasure_event)
+
+    # Событие уничтожения врага
+    enemy3 = Enemy("Гоблин", health=50, attack_power=10)
+    enemy_defeated_event = Event(GameEventType.ENEMY_DEFEATED, enemy3)
+    publisher.publish(enemy_defeated_event)
+
+    # Событие изменения здоровья
+    health_change_event = Event(GameEventType.HEALTH_CHANGED, player3, {"current_health": 80, "max_health": 100})
+    publisher.publish(health_change_event)
+
+    print("\n=== Статистика достижений ===")
+    print(f"Нанесено урона: {achievements.damage_dealt}")
+    print(f"Повержено врагов: {achievements.enemies_defeated}")
+    print(f"Найдено сокровищ: {achievements.treasures_found}")
+    print()
+
+    # Тестирование уровня 3.2 - практическое применение
+    print("--- Уровень 3.2: Практическое применение Observer ---")
+    
+    # Создаем профиль игрока
+    player_profile = PlayerProfile("Алекс", level=1)
+
+    # Создаем наблюдателей
+    friends_notifier = FriendNotifier(["Борис", "Виктория", "Елена"])
+    feed_updater = FeedUpdater()
+    notification_service = NotificationService("Алекс")
+
+    # Подписываем наблюдателей на профиль игрока
+    player_profile.attach(friends_notifier)
+    player_profile.attach(feed_updater)
+    player_profile.attach(notification_service)
+
+    print(f"Игрок: {player_profile.username}, уровень: {player_profile.level}, золото: {player_profile.gold}\n")
+
+    # Симулируем действия игрока
+    print("1. Игрок получает опыт:")
+    player_profile.add_experience(150)
+
+    print("\n2. Игрок получает золото:")
+    player_profile.gold = 100
+
+    print("\n3. Игрок тратит золото:")
+    player_profile.gold = 75
+
+    print("\n4. Игрок разблокирует достижение:")
+    player_profile.unlock_achievement("Первые шаги")
+
+    print("\n5. Изменение статуса игрока:")
+    player_profile.online_status = "в сети"
+
+    print("\n6. Игрок получает дополнительный опыт:")
+    player_profile.add_experience(200)
+
+    print("\n=== Результаты ===")
+    print(f"Итоговый уровень: {player_profile.level}")
+    print(f"Итоговое золото: {player_profile.gold}")
+
+    print(f"\nПоследние записи в ленте ({len(feed_updater.get_recent_posts())}):")
+    for post in feed_updater.get_recent_posts():
+        print(f"  - {post}")
+
+    print(f"\nУведомления для игрока ({len(notification_service.get_unread_notifications())}):")
+    for notification in notification_service.get_unread_notifications():
+        print(f"  - {notification}")
