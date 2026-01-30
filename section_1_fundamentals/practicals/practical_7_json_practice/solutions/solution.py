@@ -1,26 +1,10 @@
-# Практическое занятие 7: Работа с JSON в игровом контексте
+# Решения для практического задания 7: Работа с JSON в игровом контексте
 
-## Цель занятия
-Изучить возможности работы с форматом JSON в Python, включая сериализацию и десериализацию данных, работу с вложенными структурами и обработку ошибок при чтении и записи JSON-файлов в игровом приложении.
-
-## Задачи
-1. Использовать модуль json для сохранения и загрузки игровых данных
-2. Реализовать системы конфигурации игры с использованием JSON
-3. Создать систему сохранения прогресса игрока в JSON-формате
-4. Разработать систему загрузки игровых ассетов из JSON-файлов
-5. Реализовать обработку ошибок при работе с JSON-данными
-
-## Ход работы
-
-### 1. Основы работы с JSON в игровом контексте
-
-Создайте файл `game_json_handlers.py` и реализуйте следующие функции:
-
-#### Сериализация и десериализация игровых объектов
-
-```python
 import json
-from datetime import datetime, date
+from datetime import datetime
+from pathlib import Path
+
+# Ниже приведены реализованные игровые классы и функции согласно заданию
 
 def serialize_game_object(obj):
     """
@@ -32,8 +16,29 @@ def serialize_game_object(obj):
     Returns:
         str: JSON-строка объекта
     """
-    # ВАШ КОД ЗДЕСЬ - реализуйте сериализацию игрового объекта
-    pass  # Замените на ваш код
+    def serialize_helper(obj):
+        if hasattr(obj, '__dict__'):
+            # Если это объект с атрибутами, сериализуем его словарь
+            return {key: serialize_helper(value) for key, value in obj.__dict__.items()}
+        elif isinstance(obj, (list, tuple)):
+            # Если это список или кортеж, рекурсивно сериализуем элементы
+            return [serialize_helper(item) for item in obj]
+        elif isinstance(obj, dict):
+            # Если это словарь, рекурсивно сериализуем значения
+            return {key: serialize_helper(value) for key, value in obj.items()}
+        elif isinstance(obj, (str, int, float, bool)) or obj is None:
+            # Базовые типы остаются без изменений
+            return obj
+        elif isinstance(obj, datetime):
+            # Дату-время преобразуем в строку ISO формата
+            return obj.isoformat()
+        else:
+            # Для прочих типов пытаемся преобразовать к строке
+            return str(obj)
+    
+    serialized_obj = serialize_helper(obj)
+    return json.dumps(serialized_obj, indent=2, ensure_ascii=False)
+
 
 def deserialize_game_object(json_str):
     """
@@ -45,138 +50,32 @@ def deserialize_game_object(json_str):
     Returns:
         объект: Десериализованный игровой объект
     """
-    # ВАШ КОД ЗДЕСЬ - реализуйте десериализацию игрового объекта
-    pass  # Замените на ваш код
-
-# Пример игрового объекта
-class Player:
-    def __init__(self, name, level=1, health=100, position=(0, 0)):
-        self.name = name
-        self.level = level
-        self.health = health
-        self.position = position
-        self.inventory = []
-        self.creation_date = datetime.now()
-
-    def to_json(self):
-        """Преобразует игрока в JSON-совместимый словарь"""
-        # ВАШ КОД ЗДЕСЬ - реализуйте преобразование в JSON
-        pass  # Замените на ваш код
-
-    @classmethod
-    def from_json(cls, json_data):
-        """Создает игрока из JSON-данных"""
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание из JSON
-        pass  # Замените на ваш код
-```
-
----
-
-## 1. Теоретическая часть: Создание игровых систем с использованием JSON
-
-### Уровень 1 - Начальный
-
-#### Задание 1.1: Создание системы конфигурации игры
-
-Создайте систему конфигурации игры с использованием JSON-файлов:
-
-```python
-import json
-from pathlib import Path
-
-class GameConfig:
-    """
-    Система конфигурации игры через JSON-файл
-    """
-    def __init__(self, config_file="config.json"):
-        self.config_file = Path(config_file)
-        self.default_config = {
-            "resolution": {
-                "width": 1920,
-                "height": 1080
-            },
-            "graphics": {
-                "quality": "high",
-                "vsync": True,
-                "anti_aliasing": "4x"
-            },
-            "audio": {
-                "master_volume": 0.8,
-                "music_volume": 0.7,
-                "sfx_volume": 1.0
-            },
-            "controls": {
-                "mouse_sensitivity": 5.0,
-                "key_bindings": {
-                    "move_forward": "W",
-                    "move_backward": "S",
-                    "move_left": "A",
-                    "move_right": "D",
-                    "jump": "SPACE",
-                    "inventory": "TAB"
-                }
-            },
-            "gameplay": {
-                "difficulty": "normal",
-                "language": "en",
-                "subtitles": True
-            }
-        self.config = self.load_config()
+    def deserialize_helper(data):
+        if isinstance(data, dict):
+            # Проверяем, является ли это датой
+            if 'isoformat' in str(data) and len(data) == 1:
+                # Пробуем определить, является ли это датой
+                for key, value in data.items():
+                    if isinstance(value, str):
+                        try:
+                            return datetime.fromisoformat(value)
+                        except ValueError:
+                            pass
+            # Создаем объект с атрибутами из словаря
+            obj = type('DynamicObject', (), {})()
+            for key, value in data.items():
+                setattr(obj, key, deserialize_helper(value))
+            return obj
+        elif isinstance(data, list):
+            # Если это список, рекурсивно десериализуем элементы
+            return [deserialize_helper(item) for item in data]
+        else:
+            # Базовые типы остаются без изменений
+            return data
     
-    def load_config(self):
-        """
-        Загружает конфигурацию из файла
-        
-        Returns:
-            dict: Словарь конфигурации
-        """
-        # ВАШ КОД ЗДЕСЬ - загрузите конфигурацию из файла
-        pass  # Замените на ваш код
-    
-    def save_config(self):
-        """
-        Сохраняет текущую конфигурацию в файл
-        """
-        # ВАШ КОД ЗДЕСЬ - сохраните конфигурацию в файл
-        pass  # Замените на ваш код
-    
-    def get_setting(self, *keys):
-        """
-        Возвращает значение настройки по цепочке ключей
-        
-        Args:
-            *keys: Ключи для доступа к настройке
-            
-        Returns:
-            значение: Значение настройки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение настройки
-        pass  # Замените на ваш код
-    
-    def set_setting(self, value, *keys):
-        """
-        Устанавливает значение настройки по цепочке ключей
-        
-        Args:
-            value: Значение для установки
-            *keys: Ключи для доступа к настройке
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте установку настройки
-        pass  # Замените на ваш код
+    parsed_json = json.loads(json_str)
+    return deserialize_helper(parsed_json)
 
-# Пример использования:
-# config = GameConfig()
-# current_resolution = config.get_setting("resolution", "width")
-# config.set_setting(1280, "resolution", "width")
-# config.save_config()
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from pathlib import Path
 
 class GameConfig:
     """
@@ -303,115 +202,7 @@ class GameConfig:
                 result[key] = value
         
         return result
-```
 
-</details>
-
-#### Задание 1.2: Система сохранения и загрузки прогресса игрока
-
-Создайте систему сохранения и загрузки прогресса игрока:
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-
-class PlayerProgressManager:
-    """
-    Система управления сохранением и загрузкой прогресса игрока
-    """
-    def __init__(self, saves_directory="saves"):
-        self.saves_directory = Path(saves_directory)
-        self.saves_directory.mkdir(exist_ok=True)
-    
-    def save_player_progress(self, player, save_name):
-        """
-        Сохраняет прогресс игрока в JSON-файл
-        
-        Args:
-            player (object): Объект игрока
-            save_name (str): Имя сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение прогресса игрока
-        pass  # Замените на ваш код
-    
-    def load_player_progress(self, save_name):
-        """
-        Загружает прогресс игрока из JSON-файла
-        
-        Args:
-            save_name (str): Имя сохранения для загрузки
-            
-        Returns:
-            object: Загруженный объект игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку прогресса игрока
-        pass  # Замените на ваш код
-    
-    def list_saves(self):
-        """
-        Возвращает список доступных сохранений
-        
-        Returns:
-            list: Список имен файлов сохранений
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение списка сохранений
-        pass  # Замените на ваш код
-    
-    def delete_save(self, save_name):
-        """
-        Удаляет файл сохранения
-        
-        Args:
-            save_name (str): Имя сохранения для удаления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте удаление сохранения
-        pass  # Замените на ваш код
-
-# Пример игрового класса игрока
-class Player:
-    def __init__(self, name, level=1, health=100, position=(0, 0)):
-        self.name = name
-        self.level = level
-        self.health = health
-        self.max_health = 100
-        self.position = position
-        self.inventory = []
-        self.stats = {
-            'strength': 10,
-            'agility': 10,
-            'intelligence': 10
-        }
-        self.play_time = 0  # Время в игре в секундах
-        self.creation_date = datetime.now()
-        self.last_played = datetime.now()
-    
-    def to_dict(self):
-        """
-        Преобразует игрока в словарь для сохранения в JSON
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте преобразование в словарь
-        pass  # Замените на ваш код
-    
-    @classmethod
-    def from_dict(cls, data):
-        """
-        Создает игрока из словаря
-        
-        Args:
-            data (dict): Словарь с данными игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание игрока из словаря
-        pass  # Замените на ваш код
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
 
 class PlayerProgressManager:
     """
@@ -489,6 +280,7 @@ class PlayerProgressManager:
             return True
         return False
 
+
 class Player:
     def __init__(self, name, level=1, health=100, position=(0, 0)):
         self.name = name
@@ -551,114 +343,7 @@ class Player:
         player.last_played = last_played
         
         return player
-```
 
-</details>
-
-### Уровень 2 - Средний
-
-#### Задание 2.1: Система загрузки игровых ассетов из JSON
-
-Создайте систему для загрузки игровых ассетов из JSON-файлов:
-
-```python
-import json
-from pathlib import Path
-
-class AssetManager:
-    """
-    Система загрузки игровых ассетов из JSON-файлов
-    """
-    def __init__(self, assets_directory="assets"):
-        self.assets_directory = Path(assets_directory)
-        self.loaded_assets = {}
-        self.asset_manifests = {}
-    
-    def load_asset_manifest(self, manifest_file):
-        """
-        Загружает манифест ассетов из JSON-файла
-        
-        Args:
-            manifest_file (str): Путь к файлу манифеста
-            
-        Returns:
-            dict: Загруженный манифест ассетов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку манифеста
-        pass  # Замените на ваш код
-    
-    def load_asset(self, asset_type, asset_name):
-        """
-        Загружает указанный ассет
-        
-        Args:
-            asset_type (str): Тип ассета (models, textures, sounds, etc.)
-            asset_name (str): Имя ассета для загрузки
-            
-        Returns:
-            object: Загруженный ассет
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку ассета
-        pass  # Замените на ваш код
-    
-    def get_asset_info(self, asset_type, asset_name):
-        """
-        Возвращает информацию об ассете
-        
-        Args:
-            asset_type (str): Тип ассета
-            asset_name (str): Имя ассета
-            
-        Returns:
-            dict: Информация об ассете
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение информации об ассете
-        pass  # Замените на ваш код
-    
-    def validate_asset_data(self, asset_data, expected_schema):
-        """
-        Проверяет, соответствует ли ассет ожидаемой схеме
-        
-        Args:
-            asset_data (dict): Данные ассета
-            expected_schema (dict): Ожидаемая схема
-            
-        Returns:
-            bool: Соответствует ли ассет схеме
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку соответствия схеме
-        pass  # Замените на ваш код
-
-# Пример структуры JSON-файла манифеста ассетов:
-# {
-#   "models": {
-#     "warrior": {
-#       "path": "models/warrior.obj",
-#       "scale": 1.0,
-#       "material": "metal"
-#     },
-#     "dragon": {
-#       "path": "models/dragon.fbx",
-#       "scale": 2.5,
-#       "material": "scales"
-#     }
-#   },
-#   "textures": {
-#     "grass": {
-#       "path": "textures/grass.png",
-#       "width": 512,
-#       "height": 512
-#     }
-#   }
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from pathlib import Path
 
 class AssetManager:
     """
@@ -811,114 +496,7 @@ class AssetManager:
                 return type(data).__name__ == schema
         
         return check_schema(asset_data, expected_schema)
-```
 
-</details>
-
-#### Задание 2.2: Система квестов с JSON-описаниями
-
-Создайте систему квестов с описаниями в формате JSON:
-
-```python
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
-
-class QuestSystem:
-    """
-    Система квестов с JSON-описаниями
-    """
-    def __init__(self, quests_directory="quests"):
-        self.quests_directory = Path(quests_directory)
-        self.quests = {}
-        self.player_quests = {}
-        self.active_quests = {}
-    
-    def load_quest_definitions(self, quest_file):
-        """
-        Загружает определения квестов из JSON-файла
-        
-        Args:
-            quest_file (str): Путь к файлу с определениями квестов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку определений квестов
-        pass  # Замените на ваш код
-    
-    def assign_quest_to_player(self, player_id, quest_id):
-        """
-        Назначает квест игроку
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста для назначения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение квеста игроку
-        pass  # Замените на ваш код
-    
-    def update_quest_progress(self, player_id, quest_id, progress_change=1):
-        """
-        Обновляет прогресс выполнения квеста
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста
-            progress_change (int): Изменение прогресса
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление прогресса квеста
-        pass  # Замените на ваш код
-    
-    def complete_quest(self, player_id, quest_id):
-        """
-        Завершает квест для игрока
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста для завершения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте завершение квеста
-        pass  # Замените на ваш код
-    
-    def get_player_active_quests(self, player_id):
-        """
-        Возвращает активные квесты игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            list: Список активных квестов игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение активных квестов
-        pass  # Замените на ваш код
-
-# Пример структуры JSON-файла квестов:
-# [
-#   {
-#     "id": "rescue_villager",
-#     "name": "Спасти деревенского жителя",
-#     "description": "Найдите и спасите деревенского жителя из лап монстров",
-#     "objective": {
-#       "type": "rescue",
-#       "target": "villager",
-#       "count": 1
-#     },
-#     "rewards": {
-#       "experience": 10,
-#       "gold": 50,
-#       "items": ["health_potion", "small_sword"]
-#     },
-#     "time_limit": 3600  # в секундах
-#   }
-# ]
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
 
 class QuestSystem:
     """
@@ -1065,110 +643,7 @@ class QuestSystem:
                 })
         
         return active_quests_info
-```
 
-</details>
-
-### Уровень 3 - Повышенный
-
-#### Задание 3.1: Система модов с JSON-конфигурацией
-
-Создайте систему модов с конфигурацией в формате JSON:
-
-```python
-import json
-from pathlib import Path
-
-class ModManager:
-    """
-    Система управления модами с JSON-конфигурацией
-    """
-    def __init__(self, mods_directory="mods"):
-        self.mods_directory = Path(mods_directory)
-        self.installed_mods = {}
-        self.enabled_mods = []
-        self.mod_dependencies = {}
-    
-    def scan_mods(self):
-        """
-        Сканирует директорию на наличие модов и загружает их конфигурацию
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сканирование модов
-        pass  # Замените на ваш код
-    
-    def load_mod_config(self, mod_id):
-        """
-        Загружает конфигурацию мода из JSON-файла
-        
-        Args:
-            mod_id (str): ID мода
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конфигурации мода
-        pass  # Замените на ваш код
-    
-    def validate_mod_compatibility(self, mod_id):
-        """
-        Проверяет совместимость мода с текущей версией игры и другими модами
-        
-        Args:
-            mod_id (str): ID мода для проверки
-            
-        Returns:
-            tuple: (совместим ли мод, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку совместимости
-        pass  # Замените на ваш код
-    
-    def enable_mod(self, mod_id):
-        """
-        Включает мод в игру
-        
-        Args:
-            mod_id (str): ID мода для включения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте включение мода
-        pass  # Замените на ваш код
-    
-    def disable_mod(self, mod_id):
-        """
-        Выключает мод из игры
-        
-        Args:
-            mod_id (str): ID мода для выключения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте выключение мода
-        pass  # Замените на ваш код
-
-# Пример структуры JSON-файла конфигурации мода (mod.json):
-# {
-#   "id": "better_graphics",
-#   "name": "Улучшенная графика",
-#   "version": "1.2.0",
-#   "author": "Имя Автора",
-#   "description": "Улучшает визуальные эффекты игры",
-#   "game_version_min": "1.0.0",
-#   "game_version_max": "2.0.0",
-#   "dependencies": ["base_mod"],
-#   "conflicts": ["old_graphics_mod"],
-#   "files": [
-#     {
-#       "source": "textures/enhanced.png",
-#       "destination": "assets/textures/enhanced.png"
-#     }
-#   ],
-#   "settings": {
-#     "enhanced_effects": true,
-#     "quality_level": 2
-#   }
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from pathlib import Path
 
 class ModManager:
     """
@@ -1338,110 +813,7 @@ class ModManager:
             return True
         
         return False
-```
 
-</details>
-
-#### Задание 3.2: Система сохранения игрового мира
-
-Разработайте систему сохранения и загрузки игрового мира в JSON:
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-
-class WorldSaveSystem:
-    """
-    Система сохранения игрового мира в JSON
-    """
-    def __init__(self, saves_directory="world_saves"):
-        self.saves_directory = Path(saves_directory)
-        self.saves_directory.mkdir(exist_ok=True)
-        self.current_world_state = {}
-    
-    def save_world(self, world_state, save_name, description=""):
-        """
-        Сохраняет состояние игрового мира в JSON-файл
-        
-        Args:
-            world_state (dict): Состояние игрового мира для сохранения
-            save_name (str): Имя сохранения
-            description (str): Описание сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение мира
-        pass  # Замените на ваш код
-    
-    def load_world(self, save_name):
-        """
-        Загружает состояние игрового мира из JSON-файла
-        
-        Args:
-            save_name (str): Имя сохранения для загрузки
-            
-        Returns:
-            dict: Состояние игрового мира
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку мира
-        pass  # Замените на ваш код
-    
-    def get_save_info(self, save_name):
-        """
-        Возвращает информацию о сохранении
-        
-        Args:
-            save_name (str): Имя сохранения
-            
-        Returns:
-            dict: Информация о сохранении
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение информации о сохранении
-        pass  # Замените на ваш код
-    
-    def validate_world_data(self, world_data):
-        """
-        Проверяет корректность данных игрового мира
-        
-        Args:
-            world_data (dict): Данные игрового мира для проверки
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных
-        pass  # Замените на ваш код
-
-# Пример структуры состояния игрового мира:
-# {
-#   "meta": {
-#     "version": "1.0",
-#     "timestamp": "2023-10-15T18:30:00",
-#     "description": "Сохранение после битвы с драконом"
-#   },
-#   "players": [
-#     {
-#       "id": "player1",
-#       "name": "Игрок1",
-#       "position": [100.5, 200.0, 50.2],
-#       "stats": {...},
-#       "inventory": [...]
-#     }
-#   ],
-#   "npcs": [...],
-#   "items_on_ground": [...],
-#   "active_quests": [...],
-#   "world_time": 43200,  # в секундах от начала игровых суток
-#   "weather": "sunny"
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
 
 class WorldSaveSystem:
     """
@@ -1583,121 +955,7 @@ class WorldSaveSystem:
                 errors.append(f"У NPC #{i} отсутствует 'name'")
         
         return len(errors) == 0, errors
-```
 
-</details>
-
----
-
-## 2. Практические задания в игровом контексте
-
-### Уровень 1 - Начальный
-
-#### Задание 1.3: Система настроек игрока
-
-Создайте систему хранения индивидуальных настроек каждого игрока в JSON:
-
-```python
-import json
-from pathlib import Path
-
-class PlayerSettingsManager:
-    """
-    Система управления индивидуальными настройками игроков
-    """
-    def __init__(self, settings_directory="player_settings"):
-        self.settings_directory = Path(settings_directory)
-        self.settings_directory.mkdir(exist_ok=True)
-        self.default_settings = {
-            "graphics": {
-                "resolution": [1920, 1080],
-                "quality": "high",
-                "vsync": True,
-                "fov": 90
-            },
-            "audio": {
-                "master_volume": 0.8,
-                "music_volume": 0.7,
-                "sfx_volume": 1.0,
-                "voice_enabled": True
-            },
-            "gameplay": {
-                "difficulty": "normal",
-                "language": "en",
-                "subtitles": True,
-                "auto_save": True
-            },
-            "interface": {
-                "ui_scale": 1.0,
-                "show_hud": True,
-                "minimap_size": "medium"
-            }
-        }
-    
-    def load_player_settings(self, player_id):
-        """
-        Загружает настройки конкретного игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            dict: Настройки игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку настроек игрока
-        pass  # Замените на ваш код
-    
-    def save_player_settings(self, player_id, settings):
-        """
-        Сохраняет настройки игрока в JSON-файл
-        
-        Args:
-            player_id (str): ID игрока
-            settings (dict): Настройки для сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение настроек игрока
-        pass  # Замените на ваш код
-    
-    def get_player_setting(self, player_id, *keys):
-        """
-        Возвращает значение настройки игрока по цепочке ключей
-        
-        Args:
-            player_id (str): ID игрока
-            *keys: Ключи для доступа к настройке
-            
-        Returns:
-            значение: Значение настройки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение настройки игрока
-        pass  # Замените на ваш код
-    
-    def set_player_setting(self, player_id, value, *keys):
-        """
-        Устанавливает значение настройки игрока по цепочке ключей
-        
-        Args:
-            player_id (str): ID игрока
-            value: Значение для установки
-            *keys: Ключи для доступа к настройке
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте установку настройки игрока
-        pass  # Замените на ваш код
-
-# Пример использования:
-# settings_mgr = PlayerSettingsManager()
-# player_settings = settings_mgr.load_player_settings("player123")
-# fov = settings_mgr.get_player_setting("player123", "graphics", "fov")
-# settings_mgr.set_player_setting("player123", 100, "graphics", "fov")
-# settings_mgr.save_player_settings("player123", player_settings)
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from pathlib import Path
 
 class PlayerSettingsManager:
     """
@@ -1832,97 +1090,7 @@ class PlayerSettingsManager:
                 result[key] = value
         
         return result
-```
 
-</details>
-
-#### Задание 1.4: Система инвентаря в JSON
-
-Реализуйте систему инвентаря, которая сохраняет и загружает предметы в формате JSON:
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-
-class InventoryManager:
-    """
-    Система управления инвентарем игрока с сохранением в JSON
-    """
-    def __init__(self, inventories_directory="inventories"):
-        self.inventories_directory = Path(inventories_directory)
-        self.inventories_directory.mkdir(exist_ok=True)
-        self.max_inventory_size = 50  # Максимальное количество предметов в инвентаре
-    
-    def create_inventory(self, player_id, initial_items=None):
-        """
-        Создает новый инвентарь для игрока
-        
-        Args:
-            player_id (str): ID игрока
-            initial_items (list): Начальные предметы (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание инвентаря
-        pass  # Замените на ваш код
-    
-    def add_item(self, player_id, item):
-        """
-        Добавляет предмет в инвентарь игрока
-        
-        Args:
-            player_id (str): ID игрока
-            item (dict): Предмет для добавления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте добавление предмета
-        pass  # Замените на ваш код
-    
-    def remove_item(self, player_id, item_id):
-        """
-        Удаляет предмет из инвентаря игрока
-        
-        Args:
-            player_id (str): ID игрока
-            item_id (str): ID предмета для удаления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте удаление предмета
-        pass  # Замените на ваш код
-    
-    def get_inventory(self, player_id):
-        """
-        Возвращает инвентарь игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            list: Список предметов в инвентаре
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение инвентаря
-        pass  # Замените на ваш код
-
-# Пример структуры предмета:
-# {
-#   "id": "sword_001",
-#   "name": "Стальной меч",
-#   "type": "weapon",
-#   "rarity": "common",
-#   "properties": {
-#     "damage": 15,
-#     "durability": 100,
-#     "durability_max": 100
-#   },
-#   "quantity": 1,
-#   "equipped": False
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
 
 class InventoryManager:
     """
@@ -2052,160 +1220,7 @@ class InventoryManager:
         
         with open(inventory_path, 'w', encoding='utf-8') as f:
             json.dump(inventory_data, f, indent=2, ensure_ascii=False)
-```
 
-</details>
-
-### Уровень 2 - Средний
-
-#### Задание 2.3: Система ачивок с JSON-хранилищем
-
-Создайте систему ачивок, которая использует JSON для хранения прогресса:
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-
-class AchievementManager:
-    """
-    Система управления достижениями с JSON-хранилищем
-    """
-    def __init__(self, achievements_file="achievements.json", progress_directory="achievement_progress"):
-        self.achievements_file = Path(achievements_file)
-        self.progress_directory = Path(progress_directory)
-        self.progress_directory.mkdir(exist_ok=True)
-        
-        # Стандартные достижения
-        self.default_achievements = [
-            {
-                "id": "first_steps",
-                "name": "Первые шаги",
-                "description": "Сделайте первые шаги в игре",
-                "type": "exploration",
-                "target": 1,
-                "rewards": {"xp": 100, "coins": 50}
-            },
-            {
-                "id": "veteran_player",
-                "name": "Опытный игрок",
-                "description": "Играть в течение 10 часов",
-                "type": "playtime",
-                "target": 36000,  # 10 часов в секундах
-                "rewards": {"xp": 1000, "special_title": "Ветеран"}
-            },
-            {
-                "id": "monster_hunter",
-                "name": "Охотник на монстров",
-                "description": "Победить 100 монстров",
-                "type": "combat",
-                "target": 100,
-                "rewards": {"xp": 500, "rare_item": "hunter_medal"}
-            }
-        ]
-        
-        self.achievements = self.load_achievements()
-    
-    def load_achievements(self):
-        """
-        Загружает список достижений из JSON-файла
-        
-        Returns:
-            list: Список достижений
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку достижений
-        pass  # Замените на ваш код
-    
-    def save_achievements(self):
-        """
-        Сохраняет список достижений в JSON-файл
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение достижений
-        pass  # Замените на ваш код
-    
-    def load_player_progress(self, player_id):
-        """
-        Загружает прогресс достижений игрока из JSON-файла
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            dict: Прогресс достижений игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку прогресса игрока
-        pass  # Замените на ваш код
-    
-    def save_player_progress(self, player_id, progress):
-        """
-        Сохраняет прогресс достижений игрока в JSON-файл
-        
-        Args:
-            player_id (str): ID игрока
-            progress (dict): Прогресс для сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение прогресса игрока
-        pass  # Замените на ваш код
-    
-    def grant_achievement(self, player_id, achievement_id):
-        """
-        Выдает достижение игроку
-        
-        Args:
-            player_id (str): ID игрока
-            achievement_id (str): ID достижения для выдачи
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте выдачу достижения
-        pass  # Замените на ваш код
-    
-    def update_achievement_progress(self, player_id, achievement_id, progress_increment=1):
-        """
-        Обновляет прогресс по достижению
-        
-        Args:
-            player_id (str): ID игрока
-            achievement_id (str): ID достижения
-            progress_increment (int): Прирост прогресса
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление прогресса
-        pass  # Замените на ваш код
-
-# Пример структуры файла достижений:
-# [
-#   {
-#     "id": "first_win",
-#     "name": "Первая победа",
-#     "description": "Одолейте первого противника",
-#     "type": "combat",
-#     "target": 1,
-#     "rewards": {
-#       "xp": 200,
-#       "coins": 100
-#     }
-#   }
-# ]
-
-# Пример структуры прогресса игрока:
-# {
-#   "first_steps": {
-#     "achieved": true,
-#     "achieved_at": "2023-10-15T10:30:00",
-#     "progress": 1
-#   },
-#   "veteran_player": {
-#     "achieved": false,
-#     "progress": 18000
-#   }
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
 
 class AchievementManager:
     """
@@ -2377,106 +1392,7 @@ class AchievementManager:
         
         self.save_player_progress(player_id, player_progress)
         return True
-```
 
-</details>
-
-#### Задание 2.4: Система локаций с JSON-описанием
-
-Разработайте систему игровых локаций с описанием в JSON:
-
-```python
-import json
-from pathlib import Path
-
-class LocationManager:
-    """
-    Система управления игровыми локациями с JSON-описанием
-    """
-    def __init__(self, locations_directory="locations", connections_file="location_connections.json"):
-        self.locations_directory = Path(locations_directory)
-        self.connections_file = Path(connections_file)
-        self.locations = {}
-        self.location_connections = {}
-        
-        self.load_all_locations()
-        self.load_connections()
-    
-    def load_all_locations(self):
-        """
-        Загружает все локации из JSON-файлов в директории
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех локаций
-        pass  # Замените на ваш код
-    
-    def load_location(self, location_id):
-        """
-        Загружает конкретную локацию из JSON-файла
-        
-        Args:
-            location_id (str): ID локации для загрузки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конкретной локации
-        pass  # Замените на ваш код
-    
-    def get_connected_locations(self, location_id):
-        """
-        Возвращает список подключенных локаций
-        
-        Args:
-            location_id (str): ID локации
-            
-        Returns:
-            list: Список подключенных локаций
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение подключенных локаций
-        pass  # Замените на ваш код
-    
-    def find_path(self, start_location, end_location):
-        """
-        Находит путь между двумя локациями
-        
-        Args:
-            start_location (str): ID начальной локации
-            end_location (str): ID конечной локации
-            
-        Returns:
-            list: Список локаций в пути (или None, если путь не найден)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте поиск пути
-        pass  # Замените на ваш код
-
-# Пример структуры JSON-файла локации (например, forest.json):
-# {
-#   "id": "forest",
-#   "name": "Темный лес",
-#   "description": "Густой лес, полный опасностей и сокровищ",
-#   "type": "wilderness",
-#   "level_range": [1, 10],
-#   "weather": "mixed",
-#   "resources": ["wood", "herbs", "berries"],
-#   "monsters": [
-#     {"name": "wolf", "level": 2, "count": 5},
-#     {"name": "giant_spider", "level": 5, "count": 2}
-#   ],
-#   "connected_locations": ["village", "cave"]
-# }
-
-# Пример структуры файла соединений (location_connections.json):
-# {
-#   "forest": ["village", "cave", "river"],
-#   "village": ["forest", "castle"],
-#   "cave": ["forest", "underground_lake"]
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from pathlib import Path
-from collections import deque
 
 class LocationManager:
     """
@@ -2533,22 +1449,6 @@ class LocationManager:
             print(f"Файл локации не найден: {location_path}")
             return None
     
-    def load_connections(self):
-        """
-        Загружает соединения между локациями из JSON-файла
-        """
-        if self.connections_file.exists():
-            try:
-                with open(self.connections_file, 'r', encoding='utf-8') as f:
-                    self.location_connections = json.load(f)
-            except json.JSONDecodeError:
-                print(f"Ошибка чтения файла соединений: {self.connections_file}")
-        else:
-            # Если файла нет, создаем его на основе данных локаций
-            for loc_id, loc_data in self.locations.items():
-                if 'connected_locations' in loc_data:
-                    self.location_connections[loc_id] = loc_data['connected_locations']
-    
     def get_connected_locations(self, location_id):
         """
         Возвращает список подключенных локаций
@@ -2576,6 +1476,7 @@ class LocationManager:
             return None
         
         # Используем алгоритм BFS для поиска кратчайшего пути
+        from collections import deque
         queue = deque([(start_location, [start_location])])
         visited = {start_location}
         
@@ -2592,137 +1493,7 @@ class LocationManager:
                     queue.append((neighbor, new_path))
         
         return None  # Путь не найден
-```
 
-</details>
-
-### Уровень 3 - Повышенный
-
-#### Задание 3.3: Комплексная игровая система с JSON-конфигурацией
-
-Создайте комплексную систему, объединяющую несколько игровых аспектов с JSON-конфигурацией:
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-
-class GameWorldManager:
-    """
-    Комплексная система управления игровым миром с JSON-конфигурацией
-    """
-    def __init__(self, config_directory="world_config"):
-        self.config_directory = Path(config_directory)
-        self.game_entities = {} # Все игровые сущности
-        self.entity_manifests = {}  # Манифесты для разных типов сущностей
-        
-        self.load_world_config()
-    
-    def load_world_config(self):
-        """
-        Загружает конфигурацию игрового мира из JSON-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конфигурации мира
-        pass  # Замените на ваш код
-    
-    def create_entity_from_template(self, entity_type, entity_id, **properties):
-        """
-        Создает игровую сущность из шаблона с дополнительными свойствами
-        
-        Args:
-            entity_type (str): Тип сущности
-            entity_id (str): ID сущности
-            **properties: Дополнительные свойства для переопределения
-        
-        Returns:
-            dict: Созданная игровая сущность
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание сущности из шаблона
-        pass  # Замените на ваш код
-    
-    def update_entity(self, entity_id, **updates):
-        """
-        Обновляет свойства игровой сущности
-        
-        Args:
-            entity_id (str): ID сущности для обновления
-            **updates: Обновляемые свойства
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление сущности
-        pass  # Замените на ваш код
-    
-    def validate_entity_data(self, entity_data, entity_type):
-        """
-        Проверяет корректность данных игровой сущности
-        
-        Args:
-            entity_data (dict): Данные сущности для проверки
-            entity_type (str): Тип сущности
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных
-        pass  # Замените на ваш код
-    
-    def export_world_state(self, export_name, entities_filter=None):
-        """
-        Экспортирует состояние игрового мира в JSON-файл
-        
-        Args:
-            export_name (str): Имя для экспорта
-            entities_filter (callable): Функция для фильтрации сущностей (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте экспорт состояния мира
-        pass  # Замените на ваш код
-    
-    def import_world_state(self, import_name):
-        """
-        Импортирует состояние игрового мира из JSON-файла
-        
-        Args:
-            import_name (str): Имя импортируемого состояния
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте импорт состояния мира
-        pass  # Замените на ваш код
-
-# Пример структуры файла конфигурации сущности (например, templates/characters.json):
-# {
-#   "warrior": {
-#     "type": "character",
-#     "template": {
-#       "health": 100,
-#       "attack": 20,
-#       "defense": 15,
-#       "skills": ["basic_attack", "shield_block"],
-#       "attributes": {
-#         "strength": 15,
-#         "agility": 10,
-#         "intelligence": 5
-#       }
-#     }
-#   },
-#   "goblin": {
-#     "type": "monster",
-#     "template": {
-#       "health": 30,
-#       "attack": 8,
-#       "defense": 3,
-#       "loot_table": ["coins: 5-10", "health_potion: 10%"],
-#       "xp_reward": 15
-#     }
-#   }
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime
-from pathlib import Path
-from collections import defaultdict
 
 class GameWorldManager:
     """
@@ -2940,165 +1711,7 @@ class GameWorldManager:
         except json.JSONDecodeError:
             print(f"Ошибка чтения файла импорта: {import_path}")
             return False
-```
 
-</details>
-
-#### Задание 3.4: Система событий и квестов с JSON-валидацией
-
-Разработайте систему событий и квестов с валидацией JSON-данных:
-
-```python
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
-
-class EventQuestManager:
-    """
-    Система управления событиями и квестами с JSON-валидацией
-    """
-    def __init__(self, events_directory="events", quests_directory="quests", validation_schema_file="validation_schema.json"):
-        self.events_directory = Path(events_directory)
-        self.quests_directory = Path(quests_directory)
-        self.validation_schema_file = Path(validation_schema_file)
-        
-        self.events = {}
-        self.quests = {}
-        self.player_events = {}
-        self.player_quests = {}
-        
-        self.validation_schemas = self.load_validation_schemas()
-        
-        self.load_all_events()
-        self.load_all_quests()
-    
-    def load_validation_schemas(self):
-        """
-        Загружает схемы валидации из JSON-файла
-        
-        Returns:
-            dict: Словарь схем валидации
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку схем валидации
-        pass  # Замените на ваш код
-    
-    def load_all_events(self):
-        """
-        Загружает все игровые события из JSON-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех событий
-        pass  # Замените на ваш код
-    
-    def load_all_quests(self):
-        """
-        Загружает все квесты из JSON-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех квестов
-        pass  # Замените на ваш код
-    
-    def validate_event_data(self, event_data):
-        """
-        Проверяет корректность данных события
-        
-        Args:
-            event_data (dict): Данные события для проверки
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных события
-        pass  # Замените на ваш код
-    
-    def validate_quest_data(self, quest_data):
-        """
-        Проверяет корректность данных квеста
-        
-        Args:
-            quest_data (dict): Данные квеста для проверки
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных квеста
-        pass  # Замените на ваш код
-    
-    def schedule_event_for_player(self, player_id, event_id, custom_params=None):
-        """
-        Назначает событие игроку с возможностью кастомизации
-        
-        Args:
-            player_id (str): ID игрока
-            event_id (str): ID события
-            custom_params (dict): Кастомные параметры для события (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение события игроку
-        pass  # Замените на ваш код
-    
-    def assign_quest_to_player(self, player_id, quest_id, difficulty_multiplier=1.0):
-        """
-        Назначает квест игроку с возможностью изменения сложности
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста
-            difficulty_multiplier (float): Множитель сложности (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение квеста игроку
-        pass  # Замените на ваш код
-
-# Пример структуры файла валидации (validation_schema.json):
-# {
-#   "event": {
-#     "required": ["id", "name", "start_time", "duration"],
-#     "properties": {
-#       "id": {"type": "string"},
-#       "name": {"type": "string"},
-#       "start_time": {"type": "string", "format": "date-time"},
-#       "duration": {"type": "number", "minimum": 1},
-#       "location": {"type": "string"},
-#       "rewards": {
-#         "type": "object",
-#         "properties": {
-#           "xp": {"type": "number"},
-#           "items": {"type": "array"}
-#         }
-#       }
-#     }
-#   },
-#   "quest": {
-#     "required": ["id", "name", "objective", "rewards"],
-#     "properties": {
-#       "id": {"type": "string"},
-#       "name": {"type": "string"},
-#       "objective": {
-#         "type": "object",
-#         "required": ["type", "target"],
-#         "properties": {
-#           "type": {"type": "string"},
-#           "target": {"type": "number"},
-#           "description": {"type": "string"}
-#         }
-#       },
-#       "rewards": {
-#         "type": "object",
-#         "properties": {
-#           "xp": {"type": "number"},
-#           "gold": {"type": "number"},
-#           "items": {"type": "array"}
-#         }
-#       }
-#     }
-#   }
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
 
 class EventQuestManager:
     """
@@ -3340,33 +1953,62 @@ class EventQuestManager:
         
         self.player_quests[player_id][quest_id] = assigned_quest
         return True
-```
 
-</details>
 
----
-
-## 3. Дополнительные задания
-
-### Задание 4: Система модов с JSON-описанием зависимостей
-
-Разработайте систему модов, которая использует JSON для описания зависимостей и конфликтов между модами:
-1. Создайте систему проверки совместимости модов
-2. Реализуйте автоматическое разрешение конфликтов
-3. Добавьте систему версий модов и совместимости
-
-### Задание 5: Система сохранения прогресса с шифрованием
-
-Реализуйте систему сохранения прогресса с использованием JSON и дополнительным шифрованием:
-1. Создайте систему шифрования JSON-файлов сохранений
-2. Реализуйте безопасное хранение чувствительных данных
-3. Добавьте проверку целостности сохранений
-
----
-
-## Контрольные вопросы:
-1. Какие основные функции предоставляет модуль json в Python?
-2. Как сериализовать и десериализовать сложные объекты в JSON?
-3. Как обрабатывать специфические типы данных (даты, кортежи) при работе с JSON?
-4. Какие игровые системы наиболее эффективно использовать с JSON?
-5. Как обеспечить целостность и безопасность JSON-файлов в игре?
+# Примеры использования классов
+if __name__ == "__main__":
+    print("=== Примеры использования игровых классов ===\n")
+    
+    # Пример использования класса GameConfig
+    print("--- Класс GameConfig ---")
+    config = GameConfig()
+    current_resolution = config.get_setting("resolution", "width")
+    print(f"Текущее разрешение по ширине: {current_resolution}")
+    config.set_setting(1280, "resolution", "width")
+    config.save_config()
+    print()
+    
+    # Пример использования класса Player
+    print("--- Класс Player ---")
+    player = Player("Алекс", 5, 150, (10.5, 20.3))
+    print(f"Игрок: {player.name}, уровень: {player.level}, здоровье: {player.health}")
+    print()
+    
+    # Пример использования системы сохранения игрока
+    print("--- Система сохранения прогресса игрока ---")
+    manager = PlayerProgressManager()
+    manager.save_player_progress(player, "save1")
+    loaded_player = manager.load_player_progress("save1")
+    if loaded_player:
+        print(f"Загруженный игрок: {loaded_player.name}, уровень: {loaded_player.level}")
+    print()
+    
+    # Пример использования класса InventoryManager
+    print("--- Класс InventoryManager ---")
+    inv_manager = InventoryManager()
+    sample_item = {
+        "id": "sword_001",
+        "name": "Стальной меч",
+        "type": "weapon",
+        "rarity": "common",
+        "properties": {
+            "damage": 15,
+            "durability": 100,
+            "durability_max": 100
+        },
+        "quantity": 1,
+        "equipped": False
+    }
+    inv_manager.add_item("player1", sample_item)
+    inventory = inv_manager.get_inventory("player1")
+    print(f"Инвентарь игрока: {inventory}")
+    print()
+    
+    # Пример использования класса AchievementManager
+    print("--- Класс AchievementManager ---")
+    ach_manager = AchievementManager()
+    ach_manager.update_achievement_progress("player1", "first_steps", 1)
+    ach_manager.grant_achievement("player1", "first_steps")
+    print()
+    
+    print("Все игровые классы успешно реализованы и готовы к использованию!")

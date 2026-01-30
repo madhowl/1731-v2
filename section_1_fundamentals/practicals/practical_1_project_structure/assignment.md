@@ -1,33 +1,44 @@
-# Практическое занятие 1: Создание структуры проекта
+# Практическое занятие 1: Создание структуры проекта игры "Сказочный Квест"
 
 ## Цель занятия
-Научиться создавать правильную структуру проекта Python-приложения, использовать виртуальное окружение и управлять зависимостями проекта.
+Научиться создавать правильную структуру проекта Python-приложения на примере разработки текстовой RPG игры, использовать виртуальное окружение и управлять зависимостями проекта.
 
 ## Задачи
-1. Создать структуру проекта для типичного Python-приложения
+1. Создать структуру проекта для текстовой RPG игры "Сказочный Квест"
 2. Настроить виртуальное окружение
 3. Создать и заполнить файл requirements.txt
 4. Написать базовую документацию для проекта
 
 ## Ход работы
 
-### 1. Создание структуры проекта
+### 1. Создание структуры проекта игры
 
 Создайте следующую структуру директорий и файлов:
 
 ```
-my_app/
+fantasy_quest/
 ├── src/
 │   ├── __init__.py
-│   ├── main.py
+│   ├── game_engine.py
 │   ├── config.py
-│   └── utils/
+│   ├── characters/
+│   │   ├── __init__.py
+│   │   ├── player.py
+│   │   └── npc.py
+│   ├── locations/
+│   │   ├── __init__.py
+│   │   └── world_map.py
+│   ├── items/
+│   │   ├── __init__.py
+│   │   └── inventory.py
+│   └── quests/
 │       ├── __init__.py
-│       └── helpers.py
+│       └── quest_system.py
 ├── tests/
 │   ├── __init__.py
-│   ├── test_main.py
-│   └── test_utils.py
+│   ├── test_characters.py
+│   ├── test_locations.py
+│   └── test_items.py
 ├── docs/
 │   └── README.md
 ├── requirements.txt
@@ -79,386 +90,717 @@ flake8>=4.0.0
 pip install -r requirements.txt
 ```
 
-### 4. Написание базовых файлов
+---
 
-Создайте следующие файлы:
+## 1. Теоретическая часть: Создание игрового мира
 
-**src/main.py**:
+### Уровень 1 - Начальный
+
+#### Задание 1.1: Создание основного модуля игры
+
+Создайте файл `src/game_engine.py` с основной логикой игры:
+
 ```python
 """
-Основной модуль приложения.
+Основной модуль игры "Сказочный Квест".
 """
 
-from src.config import APP_NAME, VERSION
-from src.utils.helpers import greet_user
+from src.config import GAME_TITLE, VERSION
+from src.characters.player import Hero
 
 
 def main():
     """
-    Основная функция приложения.
+    Основная функция приложения игры.
     """
-    print(f"{APP_NAME} версии {VERSION}")
-    name = input("Введите ваше имя: ")
-    greeting = greet_user(name)
-    print(greeting)
+    print(f"{GAME_TITLE} версии {VERSION}")
+    
+    # Запрашиваем имя игрока
+    name = input("Введите имя вашего героя: ")
+    hero = Hero(name)
+    
+    print(f"Добро пожаловать в мир Сказочного Квеста, {hero.name}!")
+    
+    # Отображаем начальные параметры героя
+    print(hero.get_stats())
 
 
 if __name__ == "__main__":
     main()
 ```
 
-**src/config.py**:
+#### Задание 1.2: Создание конфигурации игры
+
+Создайте файл `src/config.py` с настройками игры:
+
 ```python
 """
-Конфигурационный файл приложения.
+Конфигурационный файл игры.
 """
 
-APP_NAME = "Мое приложение"
+GAME_TITLE = "Сказочный Квест"
 VERSION = "1.0.0"
 DEBUG = True
+
+# Игровые параметры
+MAX_HEALTH = 10
+STARTING_GOLD = 50
+DEFAULT_ATTACK = 10
 ```
 
-**src/utils/helpers.py**:
+### Уровень 2 - Средний
+
+#### Задание 2.1: Создание системы персонажей
+
+Создайте файл `src/characters/player.py`:
+
 ```python
 """
-Вспомогательные функции.
+Модуль для работы с персонажем игрока.
 """
 
+from src.config import MAX_HEALTH, DEFAULT_ATTACK, STARTING_GOLD
+from src.items.inventory import Inventory
 
-def greet_user(name):
+
+class Hero:
     """
-    Возвращает приветствие для пользователя.
-    
-    Args:
-        name (str): Имя пользователя
+    Класс для представления героя игрока.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.health = MAX_HEALTH
+        self.max_health = MAX_HEALTH
+        self.attack = DEFAULT_ATTACK
+        self.gold = STARTING_GOLD
+        self.level = 1
+        self.xp = 0
+        self.xp_to_level = 100
+        self.inventory = Inventory()
         
-    Returns:
-        str: Приветствие
-    """
-    if not name:
-        return "Привет, незнакомец!"
-    return f"Привет, {name}!"
+    def get_stats(self):
+        """
+        Возвращает строку с характеристиками героя.
+        """
+        return f"""
+Имя: {self.name}
+Уровень: {self.level}
+Здоровье: {self.health}/{self.max_health}
+Атака: {self.attack}
+Золото: {self.gold}
+Опыт: {self.xp}/{self.xp_to_level}
+        """.strip()
 
-
-def calculate_square(number):
-    """
-    Вычисляет квадрат числа.
-    
-    Args:
-        number (int or float): Число
+    def is_alive(self):
+        """
+        Проверяет, жив ли герой.
+        """
+        return self.health > 0
         
-    Returns:
-        int or float: Квадрат числа
-    """
-    return number ** 2
+    def take_damage(self, damage):
+        """
+        Герой получает урон.
+        """
+        self.health = max(0, self.health - damage)
+        return damage
+
+    def heal(self, amount):
+        """
+        Герой восстанавливает здоровье.
+        """
+        old_health = self.health
+        self.health = min(self.max_health, self.health + amount)
+        return self.health - old_health
 ```
 
-**tests/test_main.py**:
+Создайте файл `src/characters/npc.py`:
+
 ```python
 """
-Тесты для основного модуля.
+Модуль для работы с NPC (неигровыми персонажами).
 """
-import pytest
-from unittest.mock import patch
-from src.main import main
 
-
-def test_main_runs_without_error():
+class NPC:
     """
-    Тест проверяет, что основная функция запускается без ошибок.
+    Класс для представления неигрового персонажа.
     """
-    # Этот тест проверяет, что main() не вызывает исключений
-    # при работе с mock-объектами
-    pass
+    def __init__(self, name, role="unknown"):
+        self.name = name
+        self.role = role
+        self.dialogues = []
+        
+    def add_dialogue(self, dialogue):
+        """
+        Добавляет диалог к NPC.
+        """
+        self.dialogues.append(dialogue)
+        
+    def speak(self):
+        """
+        NPC говорит первый доступный диалог.
+        """
+        if self.dialogues:
+            return self.dialogues[0]
+        return f"{self.name} молчит."
 ```
 
-**tests/test_utils.py**:
+### Уровень 3 - Повышенный
+
+#### Задание 3.1: Создание системы предметов инвентаря
+
+Создайте файл `src/items/inventory.py`:
+
 ```python
 """
-Тесты для вспомогательных функций.
+Модуль для работы с инвентарем игрока.
 """
-import pytest
-from src.utils.helpers import greet_user, calculate_square
+
+class Item:
+    """
+    Базовый класс для игрового предмета.
+    """
+    def __init__(self, name, item_type, value=0):
+        self.name = name
+        self.item_type = item_type
+        self.value = value
+
+    def use(self, target):
+        """
+        Использование предмета на цели.
+        """
+        return f"Вы использовали {self.name}."
 
 
-def test_greet_user_with_name():
+class Inventory:
     """
-    Тест приветствия пользователя с указанным именем.
+    Класс инвентаря игрока.
     """
-    result = greet_user("Иван")
-    assert result == "Привет, Иван!"
+    def __init__(self, max_size=10):
+        self.items = []
+        self.max_size = max_size
 
+    def add_item(self, item):
+        """
+        Добавляет предмет в инвентарь.
+        """
+        if len(self.items) < self.max_size:
+            self.items.append(item)
+            return True
+        return False
 
-def test_greet_user_without_name():
-    """
-    Тест приветствия пользователя без имени.
-    """
-    result = greet_user("")
-    assert result == "Привет, незнакомец!"
+    def remove_item(self, item_name):
+        """
+        Удаляет предмет из инвентаря по имени.
+        """
+        for i, item in enumerate(self.items):
+            if item.name.lower() == item_name.lower():
+                return self.items.pop(i)
+        return None
 
-
-def test_calculate_square_positive():
-    """
-    Тест вычисления квадрата положительного числа.
-    """
-    result = calculate_square(5)
-    assert result == 25
-
-
-def test_calculate_square_negative():
-    """
-    Тест вычисления квадрата отрицательного числа.
-    """
-    result = calculate_square(-3)
-    assert result == 9
-
-
-def test_calculate_square_zero():
-    """
-    Тест вычисления квадрата нуля.
-    """
-    result = calculate_square(0)
-    assert result == 0
+    def get_items_by_type(self, item_type):
+        """
+        Возвращает список предметов указанного типа.
+        """
+        return [item for item in self.items if item.item_type == item_type]
+        
+    def get_total_value(self):
+        """
+        Возвращает общую стоимость всех предметов в инвентаре.
+        """
+        return sum(item.value for item in self.items)
 ```
 
-**setup.py**:
+Создайте файл `src/locations/world_map.py`:
+
 ```python
 """
-Файл установки пакета.
+Модуль для работы с игровой картой.
 """
-from setuptools import setup, find_packages
+
+class Location:
+    """
+    Класс для представления игровой локации.
+    """
+    def __init__(self, name, description, dangerous=False):
+        self.name = name
+        self.description = description
+        self.dangerous = dangerous
+        self.npcs = []
+        self.items = []
+        self.connections = []  # Список связанных локаций
+
+    def add_npc(self, npc):
+        """
+        Добавляет NPC в локацию.
+        """
+        self.npcs.append(npc)
+
+    def add_connection(self, location):
+        """
+        Добавляет связь с другой локацией.
+        """
+        if location not in self.connections:
+            self.connections.append(location)
+
+    def describe(self):
+        """
+        Описывает локацию.
+        """
+        danger_text = " (ОПАСНО)" if self.dangerous else ""
+        return f"{self.name}{danger_text}\n{self.description}"
 
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+class WorldMap:
+    """
+    Класс для представления всей игровой карты.
+    """
+    def __init__(self):
+        self.locations = {}
+        self.start_location = None
 
+    def add_location(self, location):
+        """
+        Добавляет локацию на карту.
+        """
+        self.locations[location.name] = location
+        if self.start_location is None:
+            self.start_location = location
 
-setup(
-    name="my_app",
-    version="1.0.0",
-    author="Ваше имя",
-    author_email="your.email@example.com",
-    description="Описание вашего приложения",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/my_app",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires='>=3.8',
-)
+    def get_location(self, name):
+        """
+        Возвращает локацию по имени.
+        """
+        return self.locations.get(name)
 ```
 
-**README.md**:
-```markdown
-# Мое приложение
+---
 
-Это пример структуры проекта для Python-приложения.
+## 2. Практические задания в игровом контексте
 
-## Установка
+### Уровень 1 - Начальный
 
-1. Клонируйте репозиторий:
-```bash
-git clone https://github.com/yourusername/my_app.git
-cd my_app
+#### Задание 1.3: Создание простого героя
+
+Создайте класс `SimpleHero` в файле `src/characters/player.py` (в дополнение к уже созданному Hero) с минимальным функционалом:
+
+```python
+class SimpleHero:
+    def __init__(self, name):
+        # ВАШ КОД ЗДЕСЬ - добавьте базовые атрибуты героя
+        pass  # Замените на ваш код
+
+    def introduce(self):
+        # ВАШ КОД ЗДЕСЬ - метод представления героя
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# hero = SimpleHero("Иван")
+# print(hero.introduce())  # Должно вывести: "Привет, я Иван!"
 ```
 
-2. Создайте и активируйте виртуальное окружение:
-```bash
-python -m venv venv
-source venv/bin/activate  # На Linux/Mac
-# или
-venv\Scripts\activate  # На Windows
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class SimpleHero:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+
+    def introduce(self):
+        return f"Привет, я {self.name}!"
 ```
 
-3. Установите зависимости:
-```bash
-pip install -r requirements.txt
+</details>
+
+#### Задание 1.4: Создание простого предмета
+
+Создайте класс `SimpleItem` в файле `src/items/inventory.py`:
+
+```python
+class SimpleItem:
+    def __init__(self, name, description=""):
+        # ВАШ КОД ЗДЕСЬ - добавьте атрибуты предмета
+        pass  # Замените на ваш код
+
+    def get_info(self):
+        # ВАШ КОД ЗДЕСЬ - метод получения информации о предмете
+        pass  # Замените на ваш код
+
+# Пример использования (после реализации)
+# sword = SimpleItem("Меч", "Острый меч новобранца")
+# print(sword.get_info())  # Должно вывести: "Меч: Острый меч новобранца"
 ```
 
-## Использование
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
 
-Запустите приложение:
-```bash
-python src/main.py
+```python
+class SimpleItem:
+    def __init__(self, name, description=""):
+        self.name = name
+        self.description = description
+
+    def get_info(self):
+        return f"{self.name}: {self.description}"
 ```
 
-## Тестирование
+</details>
 
-Запустите тесты:
-```bash
-pytest
+### Уровень 2 - Средний
+
+#### Задание 2.2: Улучшенная система инвентаря
+
+Расширьте класс `Inventory` в файле `src/items/inventory.py`, добавив методы для поиска предметов и проверки места:
+
+```python
+class Inventory:
+    # ... (предыдущий код остается без изменений)
+    
+    def has_space(self):
+        # ВАШ КОД ЗДЕСЬ - проверка наличия свободного места
+        pass  # Замените на ваш код
+
+    def find_item(self, name):
+        # ВАШ КОД ЗДЕСЬ - поиск предмета по имени
+        pass  # Замените на ваш код
+
+    def get_items_count(self):
+        # ВАШ КОД ЗДЕСЬ - получение количества предметов
+        pass  # Замените на ваш код
+
+    def get_available_space(self):
+        # ВАШ КОД ЗДЕСЬ - получение доступного места
+        pass  # Замените на ваш код
 ```
 
-## Лицензия
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
 
-MIT License
+```python
+class Inventory:
+    # ... (предыдущий код остается без изменений)
+    
+    def has_space(self):
+        return len(self.items) < self.max_size
+
+    def find_item(self, name):
+        for item in self.items:
+            if item.name.lower() == name.lower():
+                return item
+        return None
+
+    def get_items_count(self):
+        return len(self.items)
+
+    def get_available_space(self):
+        return self.max_size - len(self.items)
 ```
 
-**LICENSE**:
-```
-MIT License
+</details>
 
-Copyright (c) 2023 Ваше имя
+#### Задание 2.3: Система квестов
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Создайте файл `src/quests/quest_system.py`:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+```python
+"""
+Модуль для работы с системой квестов.
+"""
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+class Quest:
+    """
+    Класс для представления квеста.
+    """
+    def __init__(self, title, description, reward_xp=10, reward_gold=5):
+        self.title = title
+        self.description = description
+        self.reward_xp = reward_xp
+        self.reward_gold = reward_gold
+        self.completed = False
 
-### 5. Настройка .gitignore
+    def complete(self):
+        """
+        Помечает квест как выполненный.
+        """
+        self.completed = True
+        return {"xp": self.reward_xp, "gold": self.reward_gold}
 
-Создайте файл `.gitignore` со следующим содержимым:
 
-```
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+class QuestLog:
+    """
+    Класс для ведения журнала квестов игрока.
+    """
+    def __init__(self):
+        self.quests = []
+        self.completed_quests = []
 
-# C extensions
-*.so
+    def add_quest(self, quest):
+        # ВАШ КОД ЗДЕСЬ - добавление квеста в журнал
+        pass  # Замените на ваш код
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+    def complete_quest(self, title):
+        # ВАШ КОД ЗДЕСЬ - завершение квеста по названию
+        pass  # Замените на ваш код
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# VSCode
-.vscode/
-
-# PyCharm
-.idea/
-
-# Virtual environments
-venv/
-env/
-ENV/
-.venv/
-
-# OS generated files
-.DS_Store
-Thumbs.db
+    def get_active_quests(self):
+        # ВАШ КОД ЗДЕСЬ - получение списка активных квестов
+        pass  # Замените на ваш код
 ```
 
-## Контрольные вопросы
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
 
-1. Какова цель использования виртуального окружения в Python?
-2. Какие файлы обычно включаются в .gitignore для Python-проекта?
-3. Почему важно правильно структурировать проект?
-4. Какие элементы должны быть включены в README.md?
+```python
+class QuestLog:
+    """
+    Класс для ведения журнала квестов игрока.
+    """
+    def __init__(self):
+        self.quests = []
+        self.completed_quests = []
 
-## Дополнительное задание
+    def add_quest(self, quest):
+        if quest not in self.quests and not quest.completed:
+            self.quests.append(quest)
 
-1. Добавьте файл `CONTRIBUTING.md` с инструкциями для участников проекта.
-2. Создайте файл `Makefile` с часто используемыми командами (запуск тестов, установка зависимостей и т.д.).
+    def complete_quest(self, title):
+        for i, quest in enumerate(self.quests):
+            if quest.title.lower() == title.lower():
+                completed_quest = self.quests.pop(i)
+                reward = completed_quest.complete()
+                self.completed_quests.append(completed_quest)
+                return reward
+        return None
+
+    def get_active_quests(self):
+        return [quest for quest in self.quests if not quest.completed]
+```
+
+</details>
+
+### Уровень 3 - Повышенный
+
+#### Задание 3.2: Система сохранения игры
+
+Создайте файл `src/save_system.py`:
+
+```python
+"""
+Модуль для сохранения и загрузки игры.
+"""
+import json
+import os
+from datetime import datetime
+
+
+class SaveSystem:
+    """
+    Система сохранения и загрузки игры.
+    """
+    def __init__(self, save_dir="saves"):
+        self.save_dir = save_dir
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+    def save_game(self, game_state, filename):
+        """
+        Сохраняет состояние игры в файл.
+        
+        Args:
+            game_state (dict): Состояние игры для сохранения
+            filename (str): Имя файла для сохранения
+        """
+        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение игры в JSON
+        pass  # Замените на ваш код
+
+    def load_game(self, filename):
+        """
+        Загружает состояние игры из файла.
+        
+        Args:
+            filename (str): Имя файла для загрузки
+            
+        Returns:
+            dict: Состояние игры или None, если файл не найден
+        """
+        # ВАШ КОД ЗДЕСЯ - реализуйте загрузку игры из JSON
+        pass  # Замените на ваш код
+
+    def get_save_list(self):
+        """
+        Возвращает список доступных сохранений.
+        
+        Returns:
+            list: Список имен файлов сохранений
+        """
+        # ВАШ КОД ЗДЕСЬ - получите список файлов в директории сохранений
+        pass  # Замените на ваш код
+```
+
+<details>
+<summary>Подсказка (раскройте, если нужна помощь)</summary>
+
+```python
+class SaveSystem:
+    """
+    Система сохранения и загрузки игры.
+    """
+    def __init__(self, save_dir="saves"):
+        self.save_dir = save_dir
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+    def save_game(self, game_state, filename):
+        """
+        Сохраняет состояние игры в файл.
+        
+        Args:
+            game_state (dict): Состояние игры для сохранения
+            filename (str): Имя файла для сохранения
+        """
+        filepath = os.path.join(self.save_dir, filename)
+        game_state['saved_at'] = datetime.now().isoformat()
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(game_state, f, ensure_ascii=False, indent=2)
+        return filepath
+
+    def load_game(self, filename):
+        """
+        Загружает состояние игры из файла.
+        
+        Args:
+            filename (str): Имя файла для загрузки
+            
+        Returns:
+            dict: Состояние игры или None, если файл не найден
+        """
+        filepath = os.path.join(self.save_dir, filename)
+        if not os.path.exists(filepath):
+            return None
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def get_save_list(self):
+        """
+        Возвращает список доступных сохранений.
+        
+        Returns:
+            list: Список имен файлов сохранений
+        """
+        saves = []
+        for file in os.listdir(self.save_dir):
+            if file.endswith('.json'):
+                saves.append(file)
+        return saves
+```
+
+</details>
+
+#### Задание 3.3: Интеграция всех систем
+
+Обновите файл `src/game_engine.py`, чтобы объединить все созданные системы:
+
+```python
+"""
+Основной модуль игры "Сказочный Квест".
+"""
+
+from src.config import GAME_TITLE, VERSION
+from src.characters.player import Hero
+from src.locations.world_map import WorldMap, Location
+from src.quests.quest_system import Quest, QuestLog
+from src.save_system import SaveSystem
+
+
+def main():
+    """
+    Основная функция приложения игры.
+    """
+    print(f"{GAME_TITLE} версии {VERSION}")
+    
+    # Запрашиваем имя игрока
+    name = input("Введите имя вашего героя: ")
+    hero = Hero(name)
+    
+    print(f"Добро пожаловать в мир Сказочного Квеста, {hero.name}!")
+    
+    # Создаем игровой мир
+    world = WorldMap()
+    village = Location("Деревня", "Маленькая деревня с уютными домиками.")
+    forest = Location("Лес", "Густой лес, полный опасностей и сокровищ.", dangerous=True)
+    
+    world.add_location(village)
+    world.add_location(forest)
+    village.add_connection(forest)
+    forest.add_connection(village)
+    
+    # Создаем квесты
+    quest_log = QuestLog()
+    tutorial_quest = Quest("Обучение", "Поговорите с главой деревни", 20, 10)
+    quest_log.add_quest(tutorial_quest)
+    
+    # Отображаем начальные параметры героя
+    print(hero.get_stats())
+    
+    # Показываем доступные квесты
+    print("\nВаши квесты:")
+    for quest in quest_log.get_active_quests():
+        print(f"- {quest.title}: {quest.description}")
+    
+    # Позволяем игроку выбрать локацию
+    print(f"\nВы находитесь в: {world.start_location.name}")
+    print(world.start_location.describe())
+    
+    # Система сохранения
+    save_system = SaveSystem()
+    
+    # Пример сохранения игры
+    game_state = {
+        "hero": {
+            "name": hero.name,
+            "level": hero.level,
+            "health": hero.health,
+            "gold": hero.gold
+        },
+        "location": world.start_location.name,
+        "completed_quests": len(quest_log.completed_quests)
+    }
+    
+    save_filename = f"{hero.name}_save.json"
+    save_path = save_system.save_game(game_state, save_filename)
+    print(f"\nИгра сохранена в: {save_path}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## 3. Дополнительные задания
+
+### Задание 4: Система боевых действий
+
+Разработайте модуль `src/battle_system.py` с классами для боевой системы:
+
+1. Класс `Battle` для управления боем между персонажами
+2. Класс `Combatant` как базовый класс для всех участников боя
+3. Механизмы атаки, защиты и использования предметов во время боя
+
+### Задание 5: Система улучшений
+
+Реализуйте систему улучшения характеристик героя:
+
+1. Добавьте систему очков улучшений
+2. Реализуйте возможность распределения очков между различными характеристиками
+3. Создайте визуальное отображение прогресса героя
+
+---
+
+## Контрольные вопросы:
+1. В каких случаях следует использовать виртуальное окружение в Python?
+2. Какие файлы обязательно должны быть включены в .gitignore для игрового проекта?
+3. Почему важна правильная структура проекта в контексте разработки игр?
+4. Какие элементы должны быть включены в README.md игрового проекта?
+5. Как обеспечить масштабируемость структуры проекта при добавлении новых игровых механик?

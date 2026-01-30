@@ -1,6 +1,6 @@
-# Упражнения для практического задания 4: Использование модуля collections в игровом контексте
+# Решения для практического задания 4: Использование модуля collections в игровом контексте
 
-# Ниже приведены заготовки для игровых структур данных, которые необходимо реализовать согласно заданию
+# Ниже приведены полные реализации игровых структур данных согласно заданию
 
 
 from collections import namedtuple, deque, Counter, defaultdict, OrderedDict
@@ -11,6 +11,11 @@ import datetime
 Monster = namedtuple('Monster', ['name', 'level', 'health', 'attack_power', 'monster_type'])
 Spell = namedtuple('Spell', ['name', 'mana_cost', 'damage', 'spell_type'])
 Location = namedtuple('Location', ['name', 'description', 'danger_level', 'required_level'])
+
+# Пример использования
+goblin = Monster("Гоблин", 1, 20, 5, "common")
+fireball = Spell("Огненный шар", 10, 15, "fire")
+forest = Location("Темный лес", "Густой лес, полный опасностей", 3, 5)
 
 
 # Задание 1.2: Использование deque для очереди игровых действий
@@ -48,6 +53,12 @@ def get_last_actions(action_queue, count=5):
         list: Список последних действий
     """
     return list(action_queue)[-count:]
+
+# Пример использования
+actions = create_action_queue(5)
+add_action(actions, "атаковал гоблина")
+add_action(actions, "использовал зелье")
+recent_actions = get_last_actions(actions)
 
 
 # Задание 2.1: Использование Counter для анализа игровой статистики
@@ -110,6 +121,13 @@ class GameStatistics:
             list: Список топ-N предметов
         """
         return self.item_usage.most_common(n)
+
+# Пример использования
+stats = GameStatistics()
+stats.record_spell_cast("Огненный шар")
+stats.record_spell_cast("Огненный шар")
+stats.record_spell_cast("Лечение")
+top_spells = stats.get_top_spells(3)
 
 
 # Задание 2.2: Использование defaultdict для группировки игровых данных
@@ -179,6 +197,12 @@ class GameDataOrganizer:
         """
         return self.monsters_by_level[level]
 
+# Пример использования
+organizer = GameDataOrganizer()
+organizer.add_item("Меч", "weapon")
+organizer.add_item("Щит", "armor")
+weapons = organizer.get_items_of_type("weapon")
+
 
 # Задание 3.1: Использование OrderedDict для системы достижений
 class AchievementSystem:
@@ -241,6 +265,12 @@ class AchievementSystem:
         unlocked_count = sum(1 for ach in self.achievements.values() if ach['unlocked'])
         total_count = len(self.achievements)
         return (unlocked_count, total_count)
+
+# Пример использования
+achievements = AchievementSystem()
+achievements.add_achievement("Первый шаг", "Сделайте первый шаг в мир игры", 5)
+achievements.unlock_achievement("Первый шаг")
+unlocked = achievements.get_unlocked_achievements()
 
 
 # Задание 3.2: Комплексное использование структур данных
@@ -363,6 +393,12 @@ class AdvancedInventory:
         """
         return len(self.items)
 
+# Пример использования
+inventory = AdvancedInventory()
+inventory.add_item("Зелье здоровья", "consumable", 5)
+inventory.add_item("Меч", "weapon", 1)
+consumables = inventory.get_items_by_type("consumable")
+
 
 # Задание 1.3: Использование Counter для анализа битв
 def create_battle_analyzer():
@@ -400,6 +436,13 @@ def get_victory_statistics(analyzer):
         'victories_by_type': dict(analyzer),
         'most_defeated': analyzer.most_common(1)[0] if analyzer else None
     }
+
+# Пример использования
+battle_stats = create_battle_analyzer()
+record_victory(battle_stats, "гоблин")
+record_victory(battle_stats, "орк")
+record_victory(battle_stats, "гоблин")
+stats = get_victory_statistics(battle_stats)
 
 
 # Задание 1.4: Использование deque для системы чата
@@ -439,6 +482,12 @@ def get_recent_messages(chat, count=10):
         list: Список последних сообщений
     """
     return list(chat)[-count:]
+
+# Пример использования
+chat = create_chat_system(20)
+send_message(chat, "Игрок1", "Привет всем!")
+send_message(chat, "Игрок2", "Привет!")
+recent_msgs = get_recent_messages(chat, 5)
 
 
 # Задание 2.3: Использование defaultdict для системы крафта
@@ -506,6 +555,11 @@ class CraftingSystem:
         
         return True
 
+# Пример использования
+crafting = CraftingSystem()
+crafting.add_recipe("Деревянный меч", "оружие", {"дерево": 3}, "меч")
+weapons = crafting.get_recipes_by_category("оружие")
+
 
 # Задание 2.4: Использование Counter для анализа эффективности заклинаний
 class SpellEffectivenessAnalyzer:
@@ -571,6 +625,12 @@ class SpellEffectivenessAnalyzer:
         # Сортируем по эффективности (в убывающем порядке)
         effectiveness_list.sort(key=lambda x: x[1], reverse=True)
         return effectiveness_list[:n]
+
+# Пример использования
+analyzer = SpellEffectivenessAnalyzer()
+analyzer.record_cast("Огненный шар", True)
+analyzer.record_cast("Огненный шар", False)
+effectiveness = analyzer.get_effectiveness("Огненный шар")
 
 
 # Задание 3.3: Система рангов игроков с использованием OrderedDict
@@ -655,6 +715,12 @@ class RankingSystem:
                 return rank
             rank += 1
         return -1  # Игрок не найден
+
+# Пример использования
+ranking = RankingSystem()
+ranking.add_player("Игрок1", 1500)
+ranking.add_player("Игрок2", 2000)
+leaderboard = ranking.get_leaderboard(5)
 
 
 # Задание 3.4: Комплексная игровая статистика
@@ -746,3 +812,84 @@ class ComprehensiveGameStats:
             list: Список последних событий
         """
         return list(self.events)[-n:]
+
+# Пример использования
+stats = ComprehensiveGameStats()
+stats.log_event("battle_won", "Игрок1", "Победа над драконом")
+stats.log_event("item_found", "Игрок1", "Меч легенд")
+player_stats = stats.get_player_stats("Игрок1")
+
+
+# Примеры использования всех структур данных
+if __name__ == "__main__":
+    print("=== Примеры использования структур данных из модуля collections ===\n")
+    
+    # Пример использования namedtuple
+    print("--- NamedTuple ---")
+    print(f"Монстр: {goblin.name}, уровень: {goblin.level}, здоровье: {goblin.health}")
+    print(f"Заклинание: {fireball.name}, стоимость маны: {fireball.mana_cost}")
+    print(f"Локация: {forest.name}, уровень опасности: {forest.danger_level}")
+    print()
+    
+    # Пример использования deque
+    print("--- Deque ---")
+    print(f"Последние действия: {recent_actions}")
+    print()
+    
+    # Пример использования Counter
+    print("--- Counter ---")
+    print(f"Топ заклинаний: {top_spells}")
+    print(f"Статистика битв: {stats.get_most_used_items(3)}")
+    print()
+    
+    # Пример использования defaultdict
+    print("--- DefaultDict ---")
+    print(f"Оружие в инвентаре: {weapons}")
+    print()
+    
+    # Пример использования OrderedDict
+    print("--- OrderedDict ---")
+    print(f"Разблокированные достижения: {[a['name'] for a in unlocked]}")
+    print(f"Прогресс достижений: {achievements.get_achievement_progress()}")
+    print()
+    
+    # Пример использования всех структур в комплексном классе
+    print("--- AdvancedInventory ---")
+    print(f"Размер инвентаря: {inventory.get_inventory_size()}")
+    print(f"Типы предметов: {inventory.get_most_common_types(3)}")
+    print(f"Предметы типа 'consumable': {[(item.name, item.quantity) for item in consumables]}")
+    print()
+    
+    # Пример статистики битв
+    print("--- Battle Statistics ---")
+    print(f"Статистика побед: {stats}")
+    print()
+    
+    # Пример чата
+    print("--- Chat System ---")
+    print(f"Последние сообщения: {recent_msgs}")
+    print()
+    
+    # Пример системы крафта
+    print("--- Crafting System ---")
+    print(f"Рецепты оружия: {[r['name'] for r in weapons]}")
+    print()
+    
+    # Пример анализа эффективности заклинаний
+    print("--- Spell Effectiveness ---")
+    print(f"Эффективность 'Огненный шар': {effectiveness}%")
+    print()
+    
+    # Пример системы рангов
+    print("--- Ranking System ---")
+    print(f"Таблица лидеров: {leaderboard}")
+    print()
+    
+    # Пример комплексной статистики
+    print("--- Comprehensive Game Stats ---")
+    print(f"Статистика игрока: {player_stats}")
+    print(f"Топ активных игроков: {stats.get_top_players_by_activity(3)}")
+    print(f"Последние события: {stats.get_recent_events(5)}")
+    print()
+    
+    print("Все структуры данных из модуля collections успешно реализованы и готовы к использованию!")

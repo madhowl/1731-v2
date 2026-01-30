@@ -1,6 +1,6 @@
-# Упражнения для практического задания 5: Работа с датой и временем в игровом контексте
+# Решения для практического задания 5: Работа с датой и временем в игровом контексте
 
-# Ниже приведены заготовки для игровых систем, которые необходимо реализовать согласно заданию
+# Ниже приведены полные реализации игровых систем с использованием модуля datetime согласно заданию
 
 
 from datetime import datetime, timedelta, date
@@ -1037,3 +1037,132 @@ class ComprehensiveEventManager:
                     notifications_sent.append(notification)
         
         return notifications_sent
+
+
+# Примеры использования всех классов
+if __name__ == "__main__":
+    print("=== Демонстрация игровых систем с использованием модуля datetime ===\n")
+    
+    # Пример использования GameTimeTracker
+    print("--- Система отслеживания игрового времени ---")
+    time_tracker = GameTimeTracker()
+    print(f"Текущее время: {time_tracker.get_current_time()}")
+    session_duration = time_tracker.get_session_duration()
+    print(f"Длительность сессии: {time_tracker.format_duration(session_duration)}")
+    print()
+    
+    # Пример использования EventLogger
+    print("--- Система регистрации событий ---")
+    event_logger = EventLogger(max_events=50)
+    event_logger.log_event("battle_won", "Игрок1", "Победа над драконом")
+    event_logger.log_event("item_found", "Игрок1", "Меч легенд")
+    battle_events = event_logger.get_events_by_type("battle_won")
+    print(f"Боевые события: {len(battle_events)}")
+    print()
+    
+    # Пример использования CooldownManager
+    print("--- Система кулдаунов ---")
+    cooldown_mgr = CooldownManager()
+    success, remaining = cooldown_mgr.use_ability("player1", "fireball", 30)
+    print(f"Использование способности: {success}, осталось: {remaining}")
+    ready = cooldown_mgr.is_ready("player1", "fireball")
+    print(f"Способность готова: {ready}")
+    print()
+    
+    # Пример использования GameCalendar
+    print("--- Игровой календарь ---")
+    calendar = GameCalendar()
+    event_id = calendar.add_event("Турнир", datetime(2023, 10, 15, 18, 0), 120, "Еженедельный турнир")
+    calendar.set_reminder(event_id, 30)  # Напомнить за 30 минут
+    upcoming = calendar.get_upcoming_events(24)
+    print(f"Предстоящие события: {len(upcoming)}")
+    print()
+    
+    # Пример использования DailyQuestSystem
+    print("--- Система ежедневных заданий ---")
+    quest_system = DailyQuestSystem()
+    quest_system.assign_daily_quests("player1")
+    player_quests = quest_system.get_player_quests("player1")
+    print(f"Задания игрока: {len(player_quests)}")
+    reset_time = quest_system.time_until_reset()
+    print(f"Время до сброса заданий: {reset_time}")
+    print()
+    
+    # Пример использования MultiTimeZoneEventManager
+    print("--- Система мероприятий с часовыми поясами ---")
+    event_manager = MultiTimeZoneEventManager()
+    event_id = event_manager.create_event(
+        "Глобальный турнир", 
+        datetime(2023, 10, 15, 15, 0),  # 15:00 UTC
+        2, 
+        "Europe/Moscow", 
+        "Ежемесячный глобальный турнир"
+    )
+    moscow_time = event_manager.get_event_time_in_timezone(event_id, "Europe/Moscow")
+    print(f"Время турнира в Москве: {moscow_time}")
+    user_events = event_manager.get_events_for_user("Europe/Moscow")
+    print(f"События для пользователя в часовом поясе Москвы: {len(user_events)}")
+    print()
+    
+    # Пример использования TimedAchievementSystem
+    print("--- Система достижений с привязкой ко времени ---")
+    achievement_system = TimedAchievementSystem()
+    achievement_system.add_timed_achievement("Марафонец", "Играть 10 часов подряд", timedelta(hours=10), "playtime")
+    achievement_system.track_player_activity("player1", timedelta(hours=5))
+    achieved = achievement_system.check_achievements("player1")
+    print(f"Полученные достижения: {len(achieved)}")
+    print()
+    
+    # Пример использования TimeFilteredLogger
+    print("--- Система логирования с временным фильтром ---")
+    time_logger = TimeFilteredLogger(max_logs=100)
+    time_logger.log("INFO", "Игрок вошел в игру", "player1")
+    time_logger.log("ERROR", "Ошибка подключения", "player2")
+    recent_logs = time_logger.get_logs_by_level("ERROR", 1)
+    print(f"Ошибки за последний час: {len(recent_logs)}")
+    print()
+    
+    # Пример использования TournamentScheduler
+    print("--- Система расписания турниров ---")
+    tournament_scheduler = TournamentScheduler()
+    tournament_id = tournament_scheduler.schedule_tournament("Еженедельный турнир", datetime(2023, 10, 20, 19, 0), 120)
+    success, msg = tournament_scheduler.register_player(tournament_id, "player1")
+    print(f"Регистрация: {success}, сообщение: {msg}")
+    upcoming_tournaments = tournament_scheduler.get_upcoming_tournaments(24)
+    print(f"Предстоящие турниры: {len(upcoming_tournaments)}")
+    print()
+    
+    # Пример использования DailyRewardSystem
+    print("--- Система ежедневных наград ---")
+    daily_rewards = DailyRewardSystem()
+    success, reward, streak = daily_rewards.claim_daily_reward("player1")
+    print(f"Получение награды: {success}, награда: {reward}, серия: {streak}")
+    next_reward_info = daily_rewards.get_next_reward_info("player1")
+    print(f"Следующая награда: {next_reward_info}")
+    print()
+    
+    # Пример использования GameTimeSystem
+    print("--- Система игрового времени с ускорением ---")
+    game_time_system = GameTimeSystem(real_time_multiplier=0.5)  # Игровое время идет в 2 раза медленнее
+    current_game_time = game_time_system.get_game_time()
+    print(f"Текущее игровое время: {current_game_time}")
+    print()
+    
+    # Пример использования ComprehensiveEventManager
+    print("--- Комплексная система событий ---")
+    comp_event_manager = ComprehensiveEventManager()
+    recurring_event_id = comp_event_manager.create_recurring_event(
+        "Еженедельный турнир", 
+        datetime(2023, 10, 15, 18, 0), 
+        120, 
+        "weekly", 
+        "Europe/Moscow"
+    )
+    comp_event_manager.register_for_event(recurring_event_id, "player1", "Europe/Moscow")
+    player_events = comp_event_manager.get_player_events("player1", 7)
+    print(f"События игрока: {len(player_events)}")
+    reminders = comp_event_manager.send_reminders()
+    print(f"Отправлено напоминаний: {len(reminders)}")
+    print()
+    
+    print("Все игровые системы с использованием модуля datetime успешно реализованы!")

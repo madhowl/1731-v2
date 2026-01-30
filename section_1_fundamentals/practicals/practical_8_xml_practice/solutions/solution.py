@@ -1,26 +1,10 @@
-# Практическое занятие 8: Работа с XML в игровом контексте
+# Решения для практического задания 8: Работа с XML в игровом контексте
 
-## Цель занятия
-Изучить возможности работы с форматом XML в Python, включая парсинг, создание XML-документов, использование различных библиотек для работы с XML на примере игровых данных.
-
-## Задачи
-1. Использовать модуль xml.etree.ElementTree для работы с XML
-2. Реализовать системы конфигурации игры с использованием XML
-3. Создать систему сохранения прогресса игрока в XML-формате
-4. Разработать систему загрузки игровых ассетов из XML-файлов
-5. Реализовать обработку ошибок при работе с XML-данными
-
-## Ход работы
-
-### 1. Основы работы с XML в игровом контексте
-
-Создайте файл `game_xml_handlers.py` и реализуйте следующие функции:
-
-#### Парсинг и создание XML-документов для игровых объектов
-
-```python
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from pathlib import Path
+
+# Ниже приведены реализованные игровые классы и функции согласно заданию
 
 def parse_xml_to_game_object(xml_string):
     """
@@ -32,8 +16,28 @@ def parse_xml_to_game_object(xml_string):
     Returns:
         object: Игровой объект
     """
-    # ВАШ КОД ЗДЕСЬ - реализуйте парсинг XML в игровой объект
-    pass  # Замените на ваш код
+    def parse_element(element):
+        # Создаем объект с атрибутами из элемента
+        obj = type('DynamicObject', (), {})()
+        
+        # Устанавливаем атрибуты из XML-атрибутов
+        for key, value in element.attrib.items():
+            setattr(obj, key, value)
+        
+        # Обрабатываем дочерние элементы
+        for child in element:
+            child_obj = parse_element(child)
+            setattr(obj, child.tag, child_obj)
+        
+        # Если у элемента есть текст, сохраняем его как атрибут 'text'
+        if element.text and element.text.strip():
+            setattr(obj, 'text', element.text.strip())
+        
+        return obj
+    
+    root = ET.fromstring(xml_string)
+    return parse_element(root)
+
 
 def game_object_to_xml(obj):
     """
@@ -45,140 +49,63 @@ def game_object_to_xml(obj):
     Returns:
         str: XML-строка объекта
     """
-    # ВАШ КОД ЗДЕСЬ - реализуйте преобразование игрового объекта в XML
-    pass  # Замените на ваш код
-
-# Пример игрового объекта
-class Player:
-    def __init__(self, name, level=1, health=100, position_x=0, position_y=0):
-        self.name = name
-        self.level = level
-        self.health = health
-        self.position_x = position_x
-        self.position_y = position_y
-        self.inventory = []
-        self.creation_date = datetime.now()
-
-    def to_xml(self):
-        """Преобразует игрока в XML-элемент"""
-        # ВАШ КОД ЗДЕСЬ - реализуйте преобразование в XML
-        pass  # Замените на ваш код
-
-    @classmethod
-    def from_xml(cls, xml_element):
-        """Создает игрока из XML-элемента"""
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание из XML
-        pass  # Замените на ваш код
-```
-
----
-
-## 1. Теоретическая часть: Создание игровых систем с использованием XML
-
-### Уровень 1 - Начальный
-
-#### Задание 1.1: Создание системы конфигурации игры
-
-Создайте систему конфигурации игры с использованием XML-файлов:
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
-
-class GameConfig:
-    """
-    Система конфигурации игры через XML-файл
-    """
-    def __init__(self, config_file="config.xml"):
-        self.config_file = Path(config_file)
-        self.default_config = {
-            "resolution": {
-                "width": 1920,
-                "height": 1080
-            },
-            "graphics": {
-                "quality": "high",
-                "vsync": True,
-                "anti_aliasing": "4x"
-            },
-            "audio": {
-                "master_volume": 0.8,
-                "music_volume": 0.7,
-                "sfx_volume": 1.0
-            },
-            "controls": {
-                "mouse_sensitivity": 5.0,
-                "key_bindings": {
-                    "move_forward": "W",
-                    "move_backward": "S",
-                    "move_left": "A",
-                    "move_right": "D",
-                    "jump": "SPACE",
-                    "inventory": "TAB"
-                }
-            },
-            "gameplay": {
-                "difficulty": "normal",
-                "language": "en",
-                "subtitles": True
-            }
-        }
-        self.root = self.load_config()
-    
-    def load_config(self):
-        """
-        Загружает конфигурацию из XML-файла
+    def convert_to_xml(obj, parent_element=None, tag_name="root"):
+        if parent_element is None:
+            element = ET.Element(tag_name)
+        else:
+            element = ET.SubElement(parent_element, tag_name)
         
-        Returns:
-            Element: Корневой элемент XML-документа
-        """
-        # ВАШ КОД ЗДЕСЬ - загрузите конфигурацию из XML-файла
-        pass  # Замените на ваш код
-    
-    def save_config(self):
-        """
-        Сохраняет текущую конфигурацию в XML-файл
-        """
-        # ВАШ КОД ЗДЕСЬ - сохраните конфигурацию в XML-файл
-        pass  # Замените на ваш код
-    
-    def get_setting(self, *keys):
-        """
-        Возвращает значение настройки по цепочке ключей
+        # Добавляем атрибуты объекта как XML-атрибуты или дочерние элементы
+        for attr_name, attr_value in obj.__dict__.items():
+            if isinstance(attr_value, (str, int, float, bool)):
+                element.set(attr_name, str(attr_value))
+            elif hasattr(attr_value, '__dict__'):
+                # Рекурсивно обрабатываем вложенные объекты
+                convert_to_xml(attr_value, element, attr_name)
+            elif isinstance(attr_value, (list, tuple)):
+                # Обрабатываем списки/кортежи
+                list_element = ET.SubElement(element, attr_name)
+                for i, item in enumerate(attr_value):
+                    if hasattr(item, '__dict__'):
+                        convert_to_xml(item, list_element, f"item_{i}")
+                    else:
+                        item_element = ET.SubElement(list_element, f"item_{i}")
+                        item_element.text = str(item)
+            else:
+                # Для остальных типов создаем дочерний элемент
+                child_element = ET.SubElement(element, attr_name)
+                child_element.text = str(attr_value)
         
-        Args:
-            *keys: Ключи для доступа к настройке
-            
-        Returns:
-            значение: Значение настройки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение настройки
-        pass  # Замените на ваш код
+        if parent_element is None:
+            # Если это корневой элемент, возвращаем строку
+            return ET.tostring(element, encoding='unicode')
+        else:
+            # Иначе просто добавляем элемент к родительскому
+            return element
     
-    def set_setting(self, value, *keys):
-        """
-        Устанавливает значение настройки по цепочке ключей
-        
-        Args:
-            value: Значение для установки
-            *keys: Ключи для доступа к настройке
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте установку настройки
-        pass  # Замените на ваш код
+    # Создаем корневой элемент
+    root_element = ET.Element("game_object")
+    
+    # Обрабатываем атрибуты корневого объекта
+    for attr_name, attr_value in obj.__dict__.items():
+        if isinstance(attr_value, (str, int, float, bool)):
+            root_element.set(attr_name, str(attr_value))
+        elif hasattr(attr_value, '__dict__'):
+            convert_to_xml(attr_value, root_element, attr_name)
+        elif isinstance(attr_value, (list, tuple)):
+            list_element = ET.SubElement(root_element, attr_name)
+            for i, item in enumerate(attr_value):
+                if hasattr(item, '__dict__'):
+                    convert_to_xml(item, list_element, f"item_{i}")
+                else:
+                    item_element = ET.SubElement(list_element, f"item_{i}")
+                    item_element.text = str(item)
+        else:
+            child_element = ET.SubElement(root_element, attr_name)
+            child_element.text = str(attr_value)
+    
+    return ET.tostring(root_element, encoding='unicode')
 
-# Пример использования:
-# config = GameConfig()
-# current_resolution = config.get_setting("resolution", "width")
-# config.set_setting(1280, "resolution", "width")
-# config.save_config()
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 class GameConfig:
     """
@@ -230,53 +157,60 @@ class GameConfig:
         if self.config_file.exists():
             try:
                 tree = ET.parse(self.config_file)
-                root = tree.getroot()
-                return root
+                return tree.getroot()
             except ET.ParseError:
                 print(f"Ошибка чтения конфигурации из {self.config_file}, используется значение по умолчанию")
-                return self.create_default_config()
+                # Создаем XML из конфигурации по умолчанию
+                root = self.create_xml_from_dict(self.default_config)
+                self.save_config_tree(root)
+                return root
         else:
             # Создаем файл конфигурации со значениями по умолчанию
-            root = self.create_default_config()
-            self.save_config()
+            root = self.create_xml_from_dict(self.default_config)
+            self.save_config_tree(root)
             return root
     
-    def create_default_config(self):
+    def create_xml_from_dict(self, config_dict, parent=None, tag="config"):
         """
-        Создает XML-дерево с конфигурацией по умолчанию
-        
-        Returns:
-            Element: Корневой элемент XML-документа
-        """
-        root = ET.Element("config")
-        
-        # Добавляем все настройки в XML
-        self.add_config_section(root, self.default_config)
-        
-        return root
-    
-    def add_config_section(self, parent, config_dict):
-        """
-        Рекурсивно добавляет разделы конфигурации в XML
+        Создает XML-элементы из словаря
         
         Args:
-            parent: Родительский элемент
-            config_dict: Словарь конфигурации
+            config_dict (dict): Словарь конфигурации
+            parent (Element): Родительский элемент (опционально)
+            tag (str): Тег корневого элемента
+            
+        Returns:
+            Element: XML-элемент
         """
+        if parent is None:
+            element = ET.Element(tag)
+        else:
+            element = ET.SubElement(parent, tag)
+        
         for key, value in config_dict.items():
             if isinstance(value, dict):
-                section = ET.SubElement(parent, key)
-                self.add_config_section(section, value)
+                self.create_xml_from_dict(value, element, key)
             else:
-                element = ET.SubElement(parent, key)
-                element.text = str(value)
+                subelement = ET.SubElement(element, key)
+                subelement.text = str(value)
+        
+        return element
+    
+    def save_config_tree(self, root_element):
+        """
+        Сохраняет XML-дерево в файл
+        
+        Args:
+            root_element (Element): Корневой элемент для сохранения
+        """
+        tree = ET.ElementTree(root_element)
+        tree.write(self.config_file, encoding="utf-8", xml_declaration=True)
     
     def save_config(self):
         """
         Сохраняет текущую конфигурацию в XML-файл
         """
-        tree = ET.ElementTree(self.root)
-        tree.write(self.config_file, encoding="utf-8", xml_declaration=True)
+        self.save_config_tree(self.root)
     
     def get_setting(self, *keys):
         """
@@ -290,14 +224,19 @@ class GameConfig:
         """
         current = self.root
         for key in keys:
-            current = current.find(key)
-            if current is None:
+            found = False
+            for child in current:
+                if child.tag == key:
+                    current = child
+                    found = True
+                    break
+            if not found:
                 return None
         
-        # Если элемент найден, возвращаем его текстовое значение
-        if current.text is not None:
-            # Пытаемся определить тип значения
-            text = current.text.strip()
+        # Пытаемся преобразовать значение к подходящему типу
+        text = current.text
+        if text is not None:
+            text = text.strip()
             if text.lower() in ['true', 'false']:
                 return text.lower() == 'true'
             elif text.isdigit():
@@ -307,12 +246,7 @@ class GameConfig:
                     return float(text)
                 except ValueError:
                     return text
-        else:
-            # Если у элемента есть подэлементы, возвращаем сам элемент
-            if len(current) > 0:
-                return current
-            else:
-                return None
+        return current.attrib  # Возвращаем атрибуты, если нет текста
     
     def set_setting(self, value, *keys):
         """
@@ -324,128 +258,30 @@ class GameConfig:
         """
         current = self.root
         for key in keys[:-1]:
-            child = current.find(key)
-            if child is None:
-                child = ET.SubElement(current, key)
-            current = child
+            found = False
+            for child in current:
+                if child.tag == key:
+                    current = child
+                    found = True
+                    break
+            if not found:
+                # Создаем новый элемент, если его нет
+                current = ET.SubElement(current, key)
         
         # Устанавливаем значение для последнего ключа
         last_key = keys[-1]
-        target_element = current.find(last_key)
-        if target_element is None:
-            target_element = ET.SubElement(current, last_key)
+        found = False
+        for child in current:
+            if child.tag == last_key:
+                child.text = str(value)
+                found = True
+                break
         
-        target_element.text = str(value)
-```
+        if not found:
+            # Создаем новый элемент, если его нет
+            new_element = ET.SubElement(current, last_key)
+            new_element.text = str(value)
 
-</details>
-
-#### Задание 1.2: Система сохранения и загрузки прогресса игрока
-
-Создайте систему сохранения и загрузки прогресса игрока:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
-
-class PlayerProgressManager:
-    """
-    Система управления сохранением и загрузкой прогресса игрока
-    """
-    def __init__(self, saves_directory="saves"):
-        self.saves_directory = Path(saves_directory)
-        self.saves_directory.mkdir(exist_ok=True)
-    
-    def save_player_progress(self, player, save_name):
-        """
-        Сохраняет прогресс игрока в XML-файл
-        
-        Args:
-            player (object): Объект игрока
-            save_name (str): Имя сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение прогресса игрока
-        pass  # Замените на ваш код
-    
-    def load_player_progress(self, save_name):
-        """
-        Загружает прогресс игрока из XML-файла
-        
-        Args:
-            save_name (str): Имя сохранения для загрузки
-            
-        Returns:
-            object: Загруженный объект игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку прогресса игрока
-        pass  # Замените на ваш код
-    
-    def list_saves(self):
-        """
-        Возвращает список доступных сохранений
-        
-        Returns:
-            list: Список имен файлов сохранений
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение списка сохранений
-        pass  # Замените на ваш код
-    
-    def delete_save(self, save_name):
-        """
-        Удаляет файл сохранения
-        
-        Args:
-            save_name (str): Имя сохранения для удаления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте удаление сохранения
-        pass  # Замените на ваш код
-
-# Пример игрового класса игрока
-class Player:
-    def __init__(self, name, level=1, health=100, position_x=0, position_y=0):
-        self.name = name
-        self.level = level
-        self.health = health
-        self.max_health = 100
-        self.position_x = position_x
-        self.position_y = position_y
-        self.inventory = []
-        self.stats = {
-            'strength': 10,
-            'agility': 10,
-            'intelligence': 10
-        }
-        self.play_time = 0  # Время в игре в секундах
-        self.creation_date = datetime.now()
-        self.last_played = datetime.now()
-    
-    def to_xml(self):
-        """
-        Преобразует игрока в XML-элемент
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте преобразование в XML
-        pass  # Замените на ваш код
-    
-    @classmethod
-    def from_xml(cls, xml_element):
-        """
-        Создает игрока из XML-элемента
-        
-        Args:
-            xml_element: XML-элемент игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание игрока из XML
-        pass  # Замените на ваш код
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
 
 class PlayerProgressManager:
     """
@@ -465,14 +301,51 @@ class PlayerProgressManager:
         """
         save_path = self.saves_directory / f"{save_name}.xml"
         
-        # Подготовим данные игрока для сохранения
-        root = player.to_xml()
+        # Создаем XML-структуру для сохранения игрока
+        root = ET.Element("player_save")
+        root.set("timestamp", datetime.now().isoformat())
         
-        # Добавим дату сохранения
-        save_date_elem = ET.SubElement(root, "save_date")
-        save_date_elem.text = datetime.now().isoformat()
+        # Добавляем атрибуты игрока
+        name_elem = ET.SubElement(root, "name")
+        name_elem.text = player.name
         
-        # Сохраняем XML
+        level_elem = ET.SubElement(root, "level")
+        level_elem.text = str(player.level)
+        
+        health_elem = ET.SubElement(root, "health")
+        health_elem.text = str(player.health)
+        
+        max_health_elem = ET.SubElement(root, "max_health")
+        max_health_elem.text = str(player.max_health)
+        
+        pos_x_elem = ET.SubElement(root, "position_x")
+        pos_x_elem.text = str(player.position_x)
+        
+        pos_y_elem = ET.SubElement(root, "position_y")
+        pos_y_elem.text = str(player.position_y)
+        
+        play_time_elem = ET.SubElement(root, "play_time")
+        play_time_elem.text = str(player.play_time)
+        
+        creation_date_elem = ET.SubElement(root, "creation_date")
+        creation_date_elem.text = player.creation_date.isoformat()
+        
+        last_played_elem = ET.SubElement(root, "last_played")
+        last_played_elem.text = player.last_played.isoformat()
+        
+        # Сохраняем инвентарь
+        inventory_elem = ET.SubElement(root, "inventory")
+        for item in player.inventory:
+            item_elem = ET.SubElement(inventory_elem, "item")
+            item_elem.text = str(item)
+        
+        # Сохраняем статистику
+        stats_elem = ET.SubElement(root, "stats")
+        for stat_name, stat_value in player.stats.items():
+            stat_elem = ET.SubElement(stats_elem, stat_name)
+            stat_elem.text = str(stat_value)
+        
+        # Сохраняем в файл
         tree = ET.ElementTree(root)
         tree.write(save_path, encoding="utf-8", xml_declaration=True)
     
@@ -495,9 +368,35 @@ class PlayerProgressManager:
             tree = ET.parse(save_path)
             root = tree.getroot()
             
-            # Обновим время последней игры
-            player = Player.from_xml(root)
-            player.last_played = datetime.now()
+            # Извлекаем атрибуты игрока
+            name = root.find("name").text
+            level = int(root.find("level").text)
+            health = int(root.find("health").text)
+            max_health = int(root.find("max_health").text)
+            position_x = float(root.find("position_x").text)
+            position_y = float(root.find("position_y").text)
+            play_time = float(root.find("play_time").text)
+            
+            # Создаем игрока
+            player = Player(name, level, health, position_x, position_y)
+            player.max_health = max_health
+            player.play_time = play_time
+            player.creation_date = datetime.fromisoformat(root.find("creation_date").text)
+            player.last_played = datetime.fromisoformat(root.find("last_played").text)
+            
+            # Восстанавливаем инвентарь
+            inventory_elem = root.find("inventory")
+            if inventory_elem is not None:
+                for item_elem in inventory_elem.findall("item"):
+                    player.inventory.append(item_elem.text)
+            
+            # Восстанавливаем статистику
+            stats_elem = root.find("stats")
+            if stats_elem is not None:
+                for stat_elem in stats_elem:
+                    stat_name = stat_elem.tag
+                    stat_value = int(stat_elem.text)
+                    player.stats[stat_name] = stat_value
             
             return player
         except ET.ParseError:
@@ -528,6 +427,7 @@ class PlayerProgressManager:
             return True
         return False
 
+
 class Player:
     def __init__(self, name, level=1, health=100, position_x=0, position_y=0):
         self.name = name
@@ -550,49 +450,49 @@ class Player:
         """
         Преобразует игрока в XML-элемент
         """
-        player_elem = ET.Element("player")
+        root = ET.Element("player")
         
         # Добавляем основные атрибуты
-        name_elem = ET.SubElement(player_elem, "name")
+        name_elem = ET.SubElement(root, "name")
         name_elem.text = self.name
         
-        level_elem = ET.SubElement(player_elem, "level")
+        level_elem = ET.SubElement(root, "level")
         level_elem.text = str(self.level)
         
-        health_elem = ET.SubElement(player_elem, "health")
+        health_elem = ET.SubElement(root, "health")
         health_elem.text = str(self.health)
         
-        max_health_elem = ET.SubElement(player_elem, "max_health")
+        max_health_elem = ET.SubElement(root, "max_health")
         max_health_elem.text = str(self.max_health)
         
-        pos_x_elem = ET.SubElement(player_elem, "position_x")
+        pos_x_elem = ET.SubElement(root, "position_x")
         pos_x_elem.text = str(self.position_x)
         
-        pos_y_elem = ET.SubElement(player_elem, "position_y")
+        pos_y_elem = ET.SubElement(root, "position_y")
         pos_y_elem.text = str(self.position_y)
         
-        play_time_elem = ET.SubElement(player_elem, "play_time")
+        play_time_elem = ET.SubElement(root, "play_time")
         play_time_elem.text = str(self.play_time)
         
-        creation_date_elem = ET.SubElement(player_elem, "creation_date")
+        creation_date_elem = ET.SubElement(root, "creation_date")
         creation_date_elem.text = self.creation_date.isoformat()
         
-        last_played_elem = ET.SubElement(player_elem, "last_played")
+        last_played_elem = ET.SubElement(root, "last_played")
         last_played_elem.text = self.last_played.isoformat()
         
         # Добавляем инвентарь
-        inventory_elem = ET.SubElement(player_elem, "inventory")
+        inventory_elem = ET.SubElement(root, "inventory")
         for item in self.inventory:
             item_elem = ET.SubElement(inventory_elem, "item")
             item_elem.text = str(item)
         
         # Добавляем статистику
-        stats_elem = ET.SubElement(player_elem, "stats")
+        stats_elem = ET.SubElement(root, "stats")
         for stat_name, stat_value in self.stats.items():
             stat_elem = ET.SubElement(stats_elem, stat_name)
             stat_elem.text = str(stat_value)
         
-        return player_elem
+        return root
     
     @classmethod
     def from_xml(cls, xml_element):
@@ -615,128 +515,25 @@ class Player:
         player = cls(name, level, health, position_x, position_y)
         player.max_health = max_health
         player.play_time = play_time
-        
-        # Восстанавливаем даты
-        creation_date_str = xml_element.find("creation_date").text
-        last_played_str = xml_element.find("last_played").text
-        player.creation_date = datetime.fromisoformat(creation_date_str)
-        player.last_played = datetime.fromisoformat(last_played_str)
+        player.creation_date = datetime.fromisoformat(xml_element.find("creation_date").text)
+        player.last_played = datetime.fromisoformat(xml_element.find("last_played").text)
         
         # Восстанавливаем инвентарь
         inventory_elem = xml_element.find("inventory")
         if inventory_elem is not None:
-            player.inventory = [item.text for item in inventory_elem.findall("item")]
+            for item_elem in inventory_elem.findall("item"):
+                player.inventory.append(item_elem.text)
         
         # Восстанавливаем статистику
         stats_elem = xml_element.find("stats")
         if stats_elem is not None:
             for stat_elem in stats_elem:
-                player.stats[stat_elem.tag] = int(stat_elem.text)
+                stat_name = stat_elem.tag
+                stat_value = int(stat_elem.text)
+                player.stats[stat_name] = stat_value
         
         return player
-```
 
-</details>
-
-### Уровень 2 - Средний
-
-#### Задание 2.1: Система загрузки игровых ассетов из XML
-
-Создайте систему для загрузки игровых ассетов из XML-файлов:
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
-
-class AssetManager:
-    """
-    Система загрузки игровых ассетов из XML-файлов
-    """
-    def __init__(self, assets_directory="assets"):
-        self.assets_directory = Path(assets_directory)
-        self.loaded_assets = {}
-        self.asset_manifests = {}
-    
-    def load_asset_manifest(self, manifest_file):
-        """
-        Загружает манифест ассетов из XML-файла
-        
-        Args:
-            manifest_file (str): Путь к файлу манифеста
-            
-        Returns:
-            dict: Загруженный манифест ассетов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку манифеста
-        pass  # Замените на ваш код
-    
-    def load_asset(self, asset_type, asset_name):
-        """
-        Загружает указанный ассет
-        
-        Args:
-            asset_type (str): Тип ассета (models, textures, sounds, etc.)
-            asset_name (str): Имя ассета для загрузки
-            
-        Returns:
-            object: Загруженный ассет
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку ассета
-        pass  # Замените на ваш код
-    
-    def get_asset_info(self, asset_type, asset_name):
-        """
-        Возвращает информацию об ассете
-        
-        Args:
-            asset_type (str): Тип ассета
-            asset_name (str): Имя ассета
-            
-        Returns:
-            dict: Информация об ассете
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение информации об ассете
-        pass  # Замените на ваш код
-    
-    def validate_asset_data(self, asset_element, expected_schema):
-        """
-        Проверяет, соответствует ли ассет ожидаемой схеме
-        
-        Args:
-            asset_element (Element): XML-элемент ассета
-            expected_schema (dict): Ожидаемая схема
-            
-        Returns:
-            bool: Соответствует ли ассет схеме
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку соответствия схеме
-        pass # Замените на ваш код
-
-# Пример структуры XML-файла манифеста ассетов:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <assets>
-#   <models>
-#     <model id="warrior" scale="1.0" material="metal">
-#       <path>models/warrior.obj</path>
-#     </model>
-#     <model id="dragon" scale="2.5" material="scales">
-#       <path>models/dragon.fbx</path>
-#     </model>
-#   </models>
-#   <textures>
-#     <texture id="grass" width="512" height="512">
-#       <path>textures/grass.png</path>
-#     </texture>
-#   </textures>
-# </assets>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 class AssetManager:
     """
@@ -766,7 +563,7 @@ class AssetManager:
             # Сохраняем манифест
             manifest_name = Path(manifest_file).stem
             self.asset_manifests[manifest_name] = root
-            return self.convert_xml_to_dict(root)
+            return self.xml_to_dict(root)
         except FileNotFoundError:
             print(f"Файл манифеста не найден: {manifest_path}")
             return {}
@@ -774,7 +571,7 @@ class AssetManager:
             print(f"Ошибка чтения XML из файла: {manifest_path}")
             return {}
     
-    def convert_xml_to_dict(self, element):
+    def xml_to_dict(self, element):
         """
         Преобразует XML-элемент в словарь
         
@@ -791,7 +588,7 @@ class AssetManager:
         
         # Обрабатываем дочерние элементы
         for child in element:
-            child_data = self.convert_xml_to_dict(child)
+            child_data = self.xml_to_dict(child)
             
             if child.tag in result:
                 # Если тег уже существует, делаем список
@@ -802,8 +599,19 @@ class AssetManager:
                 result[child.tag] = child_data
         
         # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
-        if not result and element.text and element.text.strip():
-            return element.text.strip()
+        if not result and element.text.strip():
+            text = element.text.strip()
+            # Пробуем преобразовать к числу
+            if text.isdigit():
+                return int(text)
+            else:
+                try:
+                    return float(text)
+                except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
+                    return text
         
         return result
     
@@ -824,10 +632,10 @@ class AssetManager:
             return self.loaded_assets[cache_key]
         
         # Ищем информацию об ассете в манифестах
-        for manifest_name, manifest_root in self.asset_manifests.items():
-            asset_element = manifest_root.find(f"./{asset_type}/{asset_type[:-1]}[@id='{asset_name}']")
+        for manifest in self.asset_manifests.values():
+            asset_element = manifest.find(f"./{asset_type}/{asset_type[:-1]}[@id='{asset_name}']")
             if asset_element is not None:
-                asset_info = self.convert_xml_to_dict(asset_element)
+                asset_info = self.xml_to_dict(asset_element)
                 asset_path = self.assets_directory / asset_info['path']
                 
                 if asset_path.exists():
@@ -874,10 +682,10 @@ class AssetManager:
         Returns:
             dict: Информация об ассете
         """
-        for manifest_name, manifest_root in self.asset_manifests.items():
-            asset_element = manifest_root.find(f"./{asset_type}/{asset_type[:-1]}[@id='{asset_name}']")
+        for manifest in self.asset_manifests.values():
+            asset_element = manifest.find(f"./{asset_type}/{asset_type[:-1]}[@id='{asset_name}']")
             if asset_element is not None:
-                return self.convert_xml_to_dict(asset_element)
+                return self.xml_to_dict(asset_element)
         
         return None
     
@@ -894,149 +702,39 @@ class AssetManager:
         """
         def check_schema(element, schema):
             if isinstance(schema, dict):
-                # Проверяем атрибуты
-                for attr_name, attr_schema in schema.items():
-                    if attr_name.startswith('@'):  # Это атрибут
-                        attr_name = attr_name[1:]
-                        if attr_name not in element.attrib:
-                            if isinstance(attr_schema, dict) and attr_schema.get('required', True):
-                                return False
-                        else:
-                            # Проверяем тип атрибута
-                            attr_value = element.attrib[attr_name]
-                            expected_type = attr_schema.get('type', 'string')
-                            if expected_type == 'number':
-                                try:
-                                    float(attr_value)
-                                except ValueError:
-                                    return False
-                            elif expected_type == 'integer':
-                                try:
-                                    int(attr_value)
-                                except ValueError:
-                                    return False
-                            elif expected_type == 'boolean':
-                                if attr_value.lower() not in ['true', 'false', '1', '0']:
-                                    return False
-                    else:  # Это дочерний элемент
-                        child = element.find(attr_name)
-                        if child is None:
-                            if isinstance(attr_schema, dict) and attr_schema.get('required', True):
-                                return False
-                        else:
-                            if not check_schema(child, attr_schema):
-                                return False
+                if not isinstance(element, dict):
+                    return False
+                
+                for key, value in schema.items():
+                    if key not in element:
+                        return False
+                    if not check_schema(element[key], value):
+                        return False
                 return True
-            elif schema == "element":
-                return element is not None
+            elif isinstance(schema, list) and len(schema) > 0:
+                if not isinstance(element, list):
+                    return False
+                for item in element:
+                    if not check_schema(item, schema[0]):
+                        return False
+                return True
+            elif schema == "string":
+                return isinstance(element, str)
+            elif schema == "number":
+                return isinstance(element, (int, float))
+            elif schema == "boolean":
+                return isinstance(element, bool)
+            elif schema == "object":
+                return isinstance(element, dict)
+            elif schema == "array":
+                return isinstance(element, list)
             else:
-                return True
+                return type(element).__name__ == schema
         
-        return check_schema(asset_element, expected_schema)
-```
+        # Для этой функции нам нужно передать данные ассета, а не элемент
+        asset_data = self.xml_to_dict(asset_element)
+        return check_schema(asset_data, expected_schema)
 
-</details>
-
-#### Задание 2.2: Система квестов с XML-описаниями
-
-Создайте систему квестов с описаниями в формате XML:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
-from pathlib import Path
-
-class QuestSystem:
-    """
-    Система квестов с XML-описаниями
-    """
-    def __init__(self, quests_directory="quests"):
-        self.quests_directory = Path(quests_directory)
-        self.quests = {}
-        self.player_quests = {}
-        self.active_quests = {}
-    
-    def load_quest_definitions(self, quest_file):
-        """
-        Загружает определения квестов из XML-файла
-        
-        Args:
-            quest_file (str): Путь к файлу с определениями квестов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку определений квестов
-        pass  # Замените на ваш код
-    
-    def assign_quest_to_player(self, player_id, quest_id):
-        """
-        Назначает квест игроку
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста для назначения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение квеста игроку
-        pass  # Замените на ваш код
-    
-    def update_quest_progress(self, player_id, quest_id, progress_change=1):
-        """
-        Обновляет прогресс выполнения квеста
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста
-            progress_change (int): Изменение прогресса
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление прогресса квеста
-        pass  # Замените на ваш код
-    
-    def complete_quest(self, player_id, quest_id):
-        """
-        Завершает квест для игрока
-        
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста для завершения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте завершение квеста
-        pass  # Замените на ваш код
-    
-    def get_player_active_quests(self, player_id):
-        """
-        Возвращает активные квесты игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            list: Список активных квестов игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение активных квестов
-        pass  # Замените на ваш код
-
-# Пример структуры XML-файла квестов:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <quests>
-#   <quest id="rescue_villager" name="Спасти деревенского жителя">
-#     <description>Найдите и спасите деревенского жителя из лап монстров</description>
-#     <objective type="rescue" target="villager" count="1"/>
-#     <rewards>
-#       <reward type="experience">100</reward>
-#       <reward type="gold">50</reward>
-#       <reward type="item">health_potion</reward>
-#       <reward type="item">small_sword</reward>
-#     </rewards>
-#     <time_limit>3600</time_limit>
-#   </quest>
-# </quests>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
-from pathlib import Path
 
 class QuestSystem:
     """
@@ -1066,21 +764,21 @@ class QuestSystem:
                 
                 # Извлекаем данные квеста
                 quest_data = {
-                    "id": quest_id,
-                    "name": quest_elem.get("name"),
-                    "description": quest_elem.find("description").text if quest_elem.find("description") is not None else "",
-                    "objective": {},
-                    "rewards": [],
-                    "time_limit": None
+                    'id': quest_id,
+                    'name': quest_elem.get("name"),
+                    'description': quest_elem.find("description").text if quest_elem.find("description") is not None else "",
+                    'objective': {},
+                    'rewards': [],
+                    'time_limit': None
                 }
                 
                 # Извлекаем цель квеста
                 objective_elem = quest_elem.find("objective")
                 if objective_elem is not None:
-                    quest_data["objective"] = {
-                        "type": objective_elem.get("type", ""),
-                        "target": objective_elem.get("target", ""),
-                        "count": int(objective_elem.get("count", 1))
+                    quest_data['objective'] = {
+                        'type': objective_elem.get("type", ""),
+                        'target': objective_elem.get("target", ""),
+                        'count': int(objective_elem.get("count", 1))
                     }
                 
                 # Извлекаем награды
@@ -1088,15 +786,15 @@ class QuestSystem:
                 if rewards_elem is not None:
                     for reward_elem in rewards_elem.findall("reward"):
                         reward_data = {
-                            "type": reward_elem.get("type", ""),
-                            "value": reward_elem.text
+                            'type': reward_elem.get("type", ""),
+                            'value': reward_elem.text
                         }
-                        quest_data["rewards"].append(reward_data)
+                        quest_data['rewards'].append(reward_data)
                 
                 # Извлекаем ограничение по времени
                 time_limit_elem = quest_elem.find("time_limit")
                 if time_limit_elem is not None:
-                    quest_data["time_limit"] = int(time_limit_elem.text)
+                    quest_data['time_limit'] = int(time_limit_elem.text)
                 
                 self.quests[quest_id] = quest_data
             
@@ -1219,107 +917,7 @@ class QuestSystem:
                 })
         
         return active_quests_info
-```
 
-</details>
-
-### Уровень 3 - Повышенный
-
-#### Задание 3.1: Система модов с XML-конфигурацией
-
-Создайте систему модов с конфигурацией в формате XML:
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
-
-class ModManager:
-    """
-    Система управления модами с XML-конфигурацией
-    """
-    def __init__(self, mods_directory="mods"):
-        self.mods_directory = Path(mods_directory)
-        self.installed_mods = {}
-        self.enabled_mods = []
-        self.mod_dependencies = {}
-    
-    def scan_mods(self):
-        """
-        Сканирует директорию на наличие модов и загружает их конфигурацию
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сканирование модов
-        pass  # Замените на ваш код
-    
-    def load_mod_config(self, mod_id):
-        """
-        Загружает конфигурацию мода из XML-файла
-        
-        Args:
-            mod_id (str): ID мода
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конфигурации мода
-        pass  # Замените на ваш код
-    
-    def validate_mod_compatibility(self, mod_id):
-        """
-        Проверяет совместимость мода с текущей версией игры и другими модами
-        
-        Args:
-            mod_id (str): ID мода для проверки
-            
-        Returns:
-            tuple: (совместим ли мод, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку совместимости
-        pass  # Замените на ваш код
-    
-    def enable_mod(self, mod_id):
-        """
-        Включает мод в игру
-        
-        Args:
-            mod_id (str): ID мода для включения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте включение мода
-        pass  # Замените на ваш код
-    
-    def disable_mod(self, mod_id):
-        """
-        Выключает мод из игры
-        
-        Args:
-            mod_id (str): ID мода для выключения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте выключение мода
-        pass  # Замените на ваш код
-
-# Пример структуры XML-файла конфигурации мода (mod.xml):
-# <?xml version="1.0" encoding="UTF-8"?>
-# <mod id="better_graphics" name="Улучшенная графика" version="1.2.0" author="Имя Автора">
-#   <description>Улучшает визуальные эффекты игры</description>
-#   <requirements>
-#     <game_version min="1.0.0" max="2.0.0"/>
-#     <dependency>base_mod</dependency>
-#   </requirements>
-#   <conflicts>
-#     <mod>old_graphics_mod</mod>
-#   </conflicts>
-#   <files>
-#     <file source="textures/enhanced.png" destination="assets/textures/enhanced.png"/>
-#   </files>
-#   <settings>
-#     <setting name="enhanced_effects" value="true"/>
-#     <setting name="quality_level" value="2"/>
-#   </settings>
-# </mod>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 class ModManager:
     """
@@ -1353,11 +951,9 @@ class ModManager:
                         self.installed_mods[mod_id] = mod_config
                         
                         # Сохраняем зависимости
-                        requirements_elem = root.find("requirements")
-                        if requirements_elem is not None:
-                            dependencies = []
-                            for dep_elem in requirements_elem.findall("dependency"):
-                                dependencies.append(dep_elem.text)
+                        dependencies_elem = root.find("requirements/dependencies")
+                        if dependencies_elem is not None:
+                            dependencies = [dep.text for dep in dependencies_elem.findall("dependency")]
                             if dependencies:
                                 self.mod_dependencies[mod_id] = dependencies
                         
@@ -1406,10 +1002,10 @@ class ModManager:
         
         # Проверяем версию игры
         game_version = "1.5.0"  # В реальной игре это будет динамически получаться
-        requirements_elem = mod_config.find("requirements/game_version")
-        if requirements_elem is not None:
-            min_version = requirements_elem.get("min")
-            max_version = requirements_elem.get("max")
+        version_elem = mod_config.find("requirements/game_version")
+        if version_elem is not None:
+            min_version = version_elem.get("min")
+            max_version = version_elem.get("max")
             
             if min_version and self.compare_versions(game_version, min_version) < 0:
                 errors.append(f"Мод требует версию игры не ниже {min_version}, текущая: {game_version}")
@@ -1418,20 +1014,20 @@ class ModManager:
                 errors.append(f"Мод несовместим с версией игры выше {max_version}, текущая: {game_version}")
         
         # Проверяем зависимости
-        requirements_elem = mod_config.find("requirements")
-        if requirements_elem is not None:
-            for dependency_elem in requirements_elem.findall("dependency"):
-                dependency = dependency_elem.text
-                if dependency not in self.installed_mods or not self.installed_mods[dependency]['enabled']:
-                    errors.append(f"Отсутствует зависимость: {dependency}")
+        dependencies_elem = mod_config.find("requirements/dependencies")
+        if dependencies_elem is not None:
+            for dependency in dependencies_elem.findall("dependency"):
+                dep_id = dependency.text
+                if dep_id not in self.installed_mods or not self.installed_mods[dep_id]['enabled']:
+                    errors.append(f"Отсутствует зависимость: {dep_id}")
         
         # Проверяем конфликты
         conflicts_elem = mod_config.find("conflicts")
         if conflicts_elem is not None:
-            for conflict_elem in conflicts_elem.findall("mod"):
-                conflict = conflict_elem.text
-                if conflict in self.enabled_mods:
-                    errors.append(f"Конфликт с модом: {conflict}")
+            for conflict in conflicts_elem.findall("mod"):
+                conflict_id = conflict.text
+                if conflict_id in self.enabled_mods:
+                    errors.append(f"Конфликт с модом: {conflict_id}")
         
         return len(errors) == 0, errors
     
@@ -1509,115 +1105,7 @@ class ModManager:
             return True
         
         return False
-```
 
-</details>
-
-#### Задание 3.2: Система сохранения игрового мира
-
-Разработайте систему сохранения и загрузки игрового мира в XML:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
-
-class WorldSaveSystem:
-    """
-    Система сохранения игрового мира в XML
-    """
-    def __init__(self, saves_directory="world_saves"):
-        self.saves_directory = Path(saves_directory)
-        self.saves_directory.mkdir(exist_ok=True)
-        self.current_world_state = {}
-    
-    def save_world(self, world_state, save_name, description=""):
-        """
-        Сохраняет состояние игрового мира в XML-файл
-        
-        Args:
-            world_state (dict): Состояние игрового мира для сохранения
-            save_name (str): Имя сохранения
-            description (str): Описание сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение мира
-        pass  # Замените на ваш код
-    
-    def load_world(self, save_name):
-        """
-        Загружает состояние игрового мира из XML-файла
-        
-        Args:
-            save_name (str): Имя сохранения для загрузки
-            
-        Returns:
-            dict: Состояние игрового мира
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку мира
-        pass  # Замените на ваш код
-    
-    def get_save_info(self, save_name):
-        """
-        Возвращает информацию о сохранении
-        
-        Args:
-            save_name (str): Имя сохранения
-            
-        Returns:
-            dict: Информация о сохранении
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение информации о сохранении
-        pass  # Замените на ваш код
-    
-    def validate_world_data(self, world_element):
-        """
-        Проверяет корректность данных игрового мира
-        
-        Args:
-            world_element (Element): XML-элемент мира для проверки
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных
-        pass  # Замените на ваш код
-
-# Пример структуры состояния игрового мира:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <world>
-#   <meta version="1.0" timestamp="2023-10-15T18:30:00" description="Сохранение после битвы с драконом"/>
-#   <players>
-#     <player id="player1" name="Игрок1">
-#       <position x="100.5" y="200.0" z="50.2"/>
-#       <stats level="5" health="80" max_health="100"/>
-#       <inventory>
-#         <item id="sword" name="Меч" quantity="1"/>
-#       </inventory>
-#     </player>
-#   </players>
-#   <npcs>
-#     <npc id="merchant1" name="Торговец" type="merchant">
-#       <position x="150.0" y="250.0" z="0.0"/>
-#     </npc>
-#   </npcs>
-#   <items_on_ground>
-#     <item id="potion1" name="Зелье" x="120.0" y="220.0" z="0.0"/>
-#   </items_on_ground>
-#   <active_quests>
-#     <quest id="q1" name="Спасти деревню"/>
-#   </active_quests>
-#   <world_time>43200</world_time>
-#   <weather>sunny</weather>
-# </world>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
 
 class WorldSaveSystem:
     """
@@ -1640,55 +1128,54 @@ class WorldSaveSystem:
         save_path = self.saves_directory / f"{save_name}.xml"
         
         # Создаем корневой элемент
-        world_elem = ET.Element("world")
+        root = ET.Element("world_save")
+        root.set("version", "1.0")
+        root.set("timestamp", datetime.now().isoformat())
+        root.set("description", description)
         
         # Добавляем метаданные
-        meta_elem = ET.SubElement(world_elem, "meta")
-        meta_elem.set("version", "1.0")
-        meta_elem.set("timestamp", datetime.now().isoformat())
-        meta_elem.set("description", description)
-        meta_elem.set("game_version", "1.0.0")  # В реальной игре будет динамически получаться
+        meta_elem = ET.SubElement(root, "meta")
+        game_version_elem = ET.SubElement(meta_elem, "game_version")
+        game_version_elem.text = "1.0.0"  # В реальной игре будет динамически получаться
+        
+        # Добавляем состояние мира
+        world_elem = ET.SubElement(root, "world_state")
         
         # Добавляем игроков
-        players_elem = ET.SubElement(world_elem, "players")
-        if "players" in world_state:
-            for player_data in world_state["players"]:
+        if 'players' in world_state:
+            players_elem = ET.SubElement(world_elem, "players")
+            for player_data in world_state['players']:
                 player_elem = ET.SubElement(players_elem, "player")
                 player_elem.set("id", str(player_data.get("id", "")))
                 player_elem.set("name", str(player_data.get("name", "")))
                 
-                # Позиция
-                pos_data = player_data.get("position", {})
-                pos_elem = ET.SubElement(player_elem, "position")
-                pos_elem.set("x", str(pos_data.get("x", 0)))
-                pos_elem.set("y", str(pos_data.get("y", 0)))
-                pos_elem.set("z", str(pos_data.get("z", 0)))
-                
-                # Статистика
-                stats_data = player_data.get("stats", {})
-                stats_elem = ET.SubElement(player_elem, "stats")
-                for stat_name, stat_value in stats_data.items():
-                    stats_elem.set(stat_name, str(stat_value))
-                
-                # Инвентарь
-                inventory_data = player_data.get("inventory", [])
-                inventory_elem = ET.SubElement(player_elem, "inventory")
-                for item_data in inventory_data:
-                    item_elem = ET.SubElement(inventory_elem, "item")
-                    item_elem.set("id", str(item_data.get("id", "")))
-                    item_elem.set("name", str(item_data.get("name", "")))
-                    item_elem.set("quantity", str(item_data.get("quantity", 1)))
+                # Добавляем атрибуты игрока
+                for key, value in player_data.items():
+                    if key not in ["id", "name"]:  # Исключаем id и name, так как они уже как атрибуты
+                        if isinstance(value, (str, int, float, bool)):
+                            sub_elem = ET.SubElement(player_elem, key)
+                            sub_elem.text = str(value)
+                        elif isinstance(value, dict):
+                            self.dict_to_xml(value, player_elem, key)
+                        elif isinstance(value, list):
+                            list_elem = ET.SubElement(player_elem, key)
+                            for i, item in enumerate(value):
+                                if isinstance(item, dict):
+                                    self.dict_to_xml(item, list_elem, f"item_{i}")
+                                else:
+                                    item_elem = ET.SubElement(list_elem, f"item_{i}")
+                                    item_elem.text = str(item)
         
         # Добавляем NPC
-        npcs_elem = ET.SubElement(world_elem, "npcs")
-        if "npcs" in world_state:
-            for npc_data in world_state["npcs"]:
+        if 'npcs' in world_state:
+            npcs_elem = ET.SubElement(world_elem, "npcs")
+            for npc_data in world_state['npcs']:
                 npc_elem = ET.SubElement(npcs_elem, "npc")
                 npc_elem.set("id", str(npc_data.get("id", "")))
                 npc_elem.set("name", str(npc_data.get("name", "")))
                 npc_elem.set("type", str(npc_data.get("type", "")))
                 
-                # Позиция
+                # Добавляем позицию
                 pos_data = npc_data.get("position", {})
                 pos_elem = ET.SubElement(npc_elem, "position")
                 pos_elem.set("x", str(pos_data.get("x", 0)))
@@ -1696,9 +1183,9 @@ class WorldSaveSystem:
                 pos_elem.set("z", str(pos_data.get("z", 0)))
         
         # Добавляем предметы на земле
-        items_elem = ET.SubElement(world_elem, "items_on_ground")
-        if "items_on_ground" in world_state:
-            for item_data in world_state["items_on_ground"]:
+        if 'items_on_ground' in world_state:
+            items_elem = ET.SubElement(world_elem, "items_on_ground")
+            for item_data in world_state['items_on_ground']:
                 item_elem = ET.SubElement(items_elem, "item")
                 item_elem.set("id", str(item_data.get("id", "")))
                 item_elem.set("name", str(item_data.get("name", "")))
@@ -1707,28 +1194,56 @@ class WorldSaveSystem:
                 item_elem.set("z", str(item_data.get("z", 0)))
         
         # Добавляем активные квесты
-        quests_elem = ET.SubElement(world_elem, "active_quests")
-        if "active_quests" in world_state:
-            for quest_data in world_state["active_quests"]:
+        if 'active_quests' in world_state:
+            quests_elem = ET.SubElement(world_elem, "active_quests")
+            for quest_data in world_state['active_quests']:
                 quest_elem = ET.SubElement(quests_elem, "quest")
                 quest_elem.set("id", str(quest_data.get("id", "")))
                 quest_elem.set("name", str(quest_data.get("name", "")))
         
         # Добавляем время мира
-        if "world_time" in world_state:
+        if 'world_time' in world_state:
             time_elem = ET.SubElement(world_elem, "world_time")
-            time_elem.text = str(world_state["world_time"])
+            time_elem.text = str(world_state['world_time'])
         
         # Добавляем погоду
-        if "weather" in world_state:
+        if 'weather' in world_state:
             weather_elem = ET.SubElement(world_elem, "weather")
-            weather_elem.text = str(world_state["weather"])
+            weather_elem.text = str(world_state['weather'])
         
-        # Сохраняем XML
-        tree = ET.ElementTree(world_elem)
+        # Сохраняем в файл
+        tree = ET.ElementTree(root)
         tree.write(save_path, encoding="utf-8", xml_declaration=True)
         
         print(f"Мир сохранен: {save_path}")
+    
+    def dict_to_xml(self, data_dict, parent_element, tag_name):
+        """
+        Преобразует словарь в XML-элемент и добавляет к родительскому элементу
+        
+        Args:
+            data_dict (dict): Словарь для преобразования
+            parent_element (Element): Родительский элемент
+            tag_name (str): Имя тега для нового элемента
+        """
+        elem = ET.SubElement(parent_element, tag_name)
+        for key, value in data_dict.items():
+            if isinstance(value, (str, int, float, bool)):
+                sub_elem = ET.SubElement(elem, key)
+                sub_elem.text = str(value)
+            elif isinstance(value, dict):
+                self.dict_to_xml(value, elem, key)
+            elif isinstance(value, list):
+                list_elem = ET.SubElement(elem, key)
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        self.dict_to_xml(item, list_elem, f"item_{i}")
+                    else:
+                        item_elem = ET.SubElement(list_elem, f"item_{i}")
+                        item_elem.text = str(item)
+            else:
+                sub_elem = ET.SubElement(elem, key)
+                sub_elem.text = str(value)
     
     def load_world(self, save_name):
         """
@@ -1750,133 +1265,141 @@ class WorldSaveSystem:
             tree = ET.parse(save_path)
             root = tree.getroot()
             
-            world_data = {}
+            world_state = {}
             
-            # Загружаем метаданные
-            meta_elem = root.find("meta")
-            if meta_elem is not None:
-                world_data['meta'] = {
-                    'version': meta_elem.get('version'),
-                    'timestamp': meta_elem.get('timestamp'),
-                    'description': meta_elem.get('description'),
-                    'game_version': meta_elem.get('game_version')
-                }
-            
-            # Загружаем игроков
-            players = []
-            players_elem = root.find("players")
-            if players_elem is not None:
-                for player_elem in players_elem.findall("player"):
-                    player_data = {
-                        'id': player_elem.get('id'),
-                        'name': player_elem.get('name')
-                    }
-                    
-                    # Позиция
-                    pos_elem = player_elem.find("position")
-                    if pos_elem is not None:
-                        player_data['position'] = {
-                            'x': float(pos_elem.get('x', 0)),
-                            'y': float(pos_elem.get('y', 0)),
-                            'z': float(pos_elem.get('z', 0))
-                        }
-                    
-                    # Статистика
-                    stats_elem = player_elem.find("stats")
-                    if stats_elem is not None:
-                        player_data['stats'] = {}
-                        for attr_name in stats_elem.attrib:
+            # Загружаем состояние мира
+            world_elem = root.find("world_state")
+            if world_elem is not None:
+                for child in world_elem:
+                    if child.tag == "players":
+                        players = []
+                        for player_elem in child.findall("player"):
+                            player_data = {"id": player_elem.get("id"), "name": player_elem.get("name")}
+                            for sub_elem in player_elem:
+                                if len(sub_elem) == 0:  # Простое значение
+                                    try:
+                                        # Пробуем преобразовать к числу
+                                        if '.' in sub_elem.text:
+                                            player_data[sub_elem.tag] = float(sub_elem.text)
+                                        else:
+                                            player_data[sub_elem.tag] = int(sub_elem.text)
+                                    except ValueError:
+                                        # Если не число, проверяем на булево
+                                        if sub_elem.text.lower() in ['true', 'false']:
+                                            player_data[sub_elem.tag] = sub_elem.text.lower() == 'true'
+                                        else:
+                                            player_data[sub_elem.tag] = sub_elem.text
+                                else:  # Сложная структура
+                                    player_data[sub_elem.tag] = self.element_to_dict(sub_elem)
+                            players.append(player_data)
+                        world_state["players"] = players
+                    elif child.tag == "npcs":
+                        npcs = []
+                        for npc_elem in child.findall("npc"):
+                            npc_data = {"id": npc_elem.get("id"), "name": npc_elem.get("name"), "type": npc_elem.get("type")}
+                            pos_elem = npc_elem.find("position")
+                            if pos_elem is not None:
+                                npc_data["position"] = {
+                                    "x": float(pos_elem.get("x")),
+                                    "y": float(pos_elem.get("y")),
+                                    "z": float(pos_elem.get("z"))
+                                }
+                            npcs.append(npc_data)
+                        world_state["npcs"] = npcs
+                    elif child.tag == "items_on_ground":
+                        items = []
+                        for item_elem in child.findall("item"):
+                            item_data = {
+                                "id": item_elem.get("id"),
+                                "name": item_elem.get("name"),
+                                "x": float(item_elem.get("x")),
+                                "y": float(item_elem.get("y")),
+                                "z": float(item_elem.get("z"))
+                            }
+                            items.append(item_data)
+                        world_state["items_on_ground"] = items
+                    elif child.tag == "active_quests":
+                        quests = []
+                        for quest_elem in child.findall("quest"):
+                            quest_data = {
+                                "id": quest_elem.get("id"),
+                                "name": quest_elem.get("name")
+                            }
+                            quests.append(quest_data)
+                        world_state["active_quests"] = quests
+                    elif child.tag == "world_time":
+                        world_state["world_time"] = int(child.text)
+                    elif child.tag == "weather":
+                        world_state["weather"] = child.text
+                    else:
+                        # Для других элементов просто сохраняем текст
+                        if len(child) == 0:
                             try:
-                                player_data['stats'][attr_name] = int(stats_elem.get(attr_name))
+                                # Пробуем преобразовать к числу
+                                if '.' in child.text:
+                                    world_state[child.tag] = float(child.text)
+                                else:
+                                    world_state[child.tag] = int(child.text)
                             except ValueError:
-                                try:
-                                    player_data['stats'][attr_name] = float(stats_elem.get(attr_name))
-                                except ValueError:
-                                    player_data['stats'][attr_name] = stats_elem.get(attr_name)
-                    
-                    # Инвентарь
-                    inventory = []
-                    inventory_elem = player_elem.find("inventory")
-                    if inventory_elem is not None:
-                        for item_elem in inventory_elem.findall("item"):
-                            inventory.append({
-                                'id': item_elem.get('id'),
-                                'name': item_elem.get('name'),
-                                'quantity': int(item_elem.get('quantity', 1))
-                            })
-                    player_data['inventory'] = inventory
-                    
-                    players.append(player_data)
+                                # Если не число, проверяем на булево
+                                if child.text.lower() in ['true', 'false']:
+                                    world_state[child.tag] = child.text.lower() == 'true'
+                                else:
+                                    world_state[child.tag] = child.text
+                        else:
+                            # Если есть дочерние элементы, преобразуем их рекурсивно
+                            world_state[child.tag] = self.element_to_dict(child)
             
-            world_data['players'] = players
-            
-            # Загружаем NPC
-            npcs = []
-            npcs_elem = root.find("npcs")
-            if npcs_elem is not None:
-                for npc_elem in npcs_elem.findall("npc"):
-                    npc_data = {
-                        'id': npc_elem.get('id'),
-                        'name': npc_elem.get('name'),
-                        'type': npc_elem.get('type')
-                    }
-                    
-                    # Позиция
-                    pos_elem = npc_elem.find("position")
-                    if pos_elem is not None:
-                        npc_data['position'] = {
-                            'x': float(pos_elem.get('x', 0)),
-                            'y': float(pos_elem.get('y', 0)),
-                            'z': float(pos_elem.get('z', 0))
-                        }
-                    
-                    npcs.append(npc_data)
-            
-            world_data['npcs'] = npcs
-            
-            # Загружаем предметы на земле
-            items = []
-            items_elem = root.find("items_on_ground")
-            if items_elem is not None:
-                for item_elem in items_elem.findall("item"):
-                    items.append({
-                        'id': item_elem.get('id'),
-                        'name': item_elem.get('name'),
-                        'x': float(item_elem.get('x', 0)),
-                        'y': float(item_elem.get('y', 0)),
-                        'z': float(item_elem.get('z', 0))
-                    })
-            
-            world_data['items_on_ground'] = items
-            
-            # Загружаем активные квесты
-            quests = []
-            quests_elem = root.find("active_quests")
-            if quests_elem is not None:
-                for quest_elem in quests_elem.findall("quest"):
-                    quests.append({
-                        'id': quest_elem.get('id'),
-                        'name': quest_elem.get('name')
-                    })
-            
-            world_data['active_quests'] = quests
-            
-            # Загружаем время мира
-            time_elem = root.find("world_time")
-            if time_elem is not None:
-                world_data['world_time'] = int(time_elem.text)
-            
-            # Загружаем погоду
-            weather_elem = root.find("weather")
-            if weather_elem is not None:
-                world_data['weather'] = weather_elem.text
-            
-            self.current_world_state = world_data
+            self.current_world_state = world_state
             print(f"Мир загружен: {save_path}")
             return self.current_world_state
         except ET.ParseError:
             print(f"Ошибка чтения сохранения: {save_path}")
             return None
+    
+    def element_to_dict(self, element):
+        """
+        Преобразует XML-элемент в словарь
+        
+        Args:
+            element: XML-элемент для преобразования
+            
+        Returns:
+            dict: Словарь с данными элемента
+        """
+        result = {}
+        
+        # Добавляем атрибуты
+        result.update(element.attrib)
+        
+        # Обрабатываем дочерние элементы
+        for child in element:
+            child_data = self.element_to_dict(child)
+            
+            if child.tag in result:
+                # Если тег уже существует, делаем список
+                if not isinstance(result[child.tag], list):
+                    result[child.tag] = [result[child.tag]]
+                result[child.tag].append(child_data)
+            else:
+                result[child.tag] = child_data
+        
+        # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
+        if not result and element.text and element.text.strip():
+            text = element.text.strip()
+            # Пробуем преобразовать к числу
+            if text.isdigit():
+                return int(text)
+            else:
+                try:
+                    return float(text)
+                except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
+                    return text
+        
+        return result
     
     def get_save_info(self, save_name):
         """
@@ -1897,26 +1420,30 @@ class WorldSaveSystem:
             tree = ET.parse(save_path)
             root = tree.getroot()
             
-            # Получаем метаданные
             meta_elem = root.find("meta")
-            if meta_elem is None:
-                return None
+            world_elem = root.find("world_state")
             
-            # Подсчитываем количество игроков, NPC и предметов
-            players_count = len(root.findall(".//player"))
-            npcs_count = len(root.findall(".//npc"))
-            items_count = len(root.findall(".//item"))  # Это включает предметы в инвентарях и на земле
-            
-            return {
+            info = {
                 'name': save_name,
-                'version': meta_elem.get('version', 'unknown'),
-                'timestamp': meta_elem.get('timestamp', 'unknown'),
-                'description': meta_elem.get('description', ''),
-                'game_version': meta_elem.get('game_version', 'unknown'),
-                'player_count': players_count,
-                'npc_count': npcs_count,
-                'item_count': items_count
+                'version': root.get("version", "unknown"),
+                'timestamp': root.get("timestamp", "unknown"),
+                'description': root.get("description", "")
             }
+            
+            if meta_elem is not None:
+                info['game_version'] = meta_elem.find("game_version").text if meta_elem.find("game_version") is not None else "unknown"
+            
+            if world_elem is not None:
+                # Подсчитываем количество игроков, NPC и предметов
+                players_count = len(world_elem.findall("players/player"))
+                npcs_count = len(world_elem.findall("npcs/npc"))
+                items_count = len(world_elem.findall("items_on_ground/item"))
+                
+                info['player_count'] = players_count
+                info['npc_count'] = npcs_count
+                info['item_count'] = items_count
+            
+            return info
         except ET.ParseError:
             print(f"Ошибка чтения информации о сохранении: {save_path}")
             return None
@@ -1933,15 +1460,13 @@ class WorldSaveSystem:
         """
         errors = []
         
-        # Проверяем наличие метаданных
+        # Проверяем обязательные поля
         meta_elem = world_element.find("meta")
         if meta_elem is None:
             errors.append("Отсутствует элемент 'meta' в данных мира")
         else:
-            if not meta_elem.get("version"):
-                errors.append("В метаданных отсутствует 'version'")
-            if not meta_elem.get("timestamp"):
-                errors.append("В метаданных отсутствует 'timestamp'")
+            if meta_elem.find("game_version") is None:
+                errors.append("В метаданных отсутствует 'game_version'")
         
         # Проверяем структуру игроков
         players_elem = world_element.find("players")
@@ -1951,10 +1476,6 @@ class WorldSaveSystem:
                     errors.append(f"У игрока #{i} отсутствует 'id'")
                 if not player_elem.get("name"):
                     errors.append(f"У игрока #{i} отсутствует 'name'")
-                
-                pos_elem = player_elem.find("position")
-                if pos_elem is None:
-                    errors.append(f"У игрока #{i} отсутствует элемент 'position'")
         
         # Проверяем структуру NPC
         npcs_elem = world_element.find("npcs")
@@ -1966,121 +1487,7 @@ class WorldSaveSystem:
                     errors.append(f"У NPC #{i} отсутствует 'name'")
         
         return len(errors) == 0, errors
-```
 
-</details>
-
----
-
-## 2. Практические задания в игровом контексте
-
-### Уровень 1 - Начальный
-
-#### Задание 1.3: Система настроек игрока
-
-Создайте систему хранения индивидуальных настроек каждого игрока в XML:
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
-
-class PlayerSettingsManager:
-    """
-    Система управления индивидуальными настройками игроков
-    """
-    def __init__(self, settings_directory="player_settings"):
-        self.settings_directory = Path(settings_directory)
-        self.settings_directory.mkdir(exist_ok=True)
-        self.default_settings = {
-            "graphics": {
-                "resolution": [1920, 1080],
-                "quality": "high",
-                "vsync": True,
-                "fov": 90
-            },
-            "audio": {
-                "master_volume": 0.8,
-                "music_volume": 0.7,
-                "sfx_volume": 1.0,
-                "voice_enabled": True
-            },
-            "gameplay": {
-                "difficulty": "normal",
-                "language": "en",
-                "subtitles": True,
-                "auto_save": True
-            },
-            "interface": {
-                "ui_scale": 1.0,
-                "show_hud": True,
-                "minimap_size": "medium"
-            }
-        }
-    
-    def load_player_settings(self, player_id):
-        """
-        Загружает настройки конкретного игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            dict: Настройки игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку настроек игрока
-        pass  # Замените на ваш код
-    
-    def save_player_settings(self, player_id, settings):
-        """
-        Сохраняет настройки игрока в XML-файл
-        
-        Args:
-            player_id (str): ID игрока
-            settings (dict): Настройки для сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение настроек игрока
-        pass  # Замените на ваш код
-    
-    def get_player_setting(self, player_id, *keys):
-        """
-        Возвращает значение настройки игрока по цепочке ключей
-        
-        Args:
-            player_id (str): ID игрока
-            *keys: Ключи для доступа к настройке
-            
-        Returns:
-            значение: Значение настройки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение настройки игрока
-        pass  # Замените на ваш код
-    
-    def set_player_setting(self, player_id, value, *keys):
-        """
-        Устанавливает значение настройки игрока по цепочке ключей
-        
-        Args:
-            player_id (str): ID игрока
-            value: Значение для установки
-            *keys: Ключи для доступа к настройке
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте установку настройки игрока
-        pass  # Замените на ваш код
-
-# Пример использования:
-# settings_mgr = PlayerSettingsManager()
-# player_settings = settings_mgr.load_player_settings("player123")
-# fov = settings_mgr.get_player_setting("player123", "graphics", "fov")
-# settings_mgr.set_player_setting("player123", 100, "graphics", "fov")
-# settings_mgr.save_player_settings("player123", player_settings)
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 class PlayerSettingsManager:
     """
@@ -2147,6 +1554,71 @@ class PlayerSettingsManager:
             self.save_player_settings(player_id, self.default_settings)
             return self.default_settings
     
+    def xml_to_dict(self, element):
+        """
+        Преобразует XML-элемент в словарь
+        
+        Args:
+            element: XML-элемент для преобразования
+            
+        Returns:
+            dict: Словарь с данными элемента
+        """
+        result = {}
+        
+        # Добавляем атрибуты
+        result.update(element.attrib)
+        
+        # Обрабатываем дочерние элементы
+        for child in element:
+            child_data = self.xml_to_dict(child)
+            
+            if child.tag in result:
+                # Если тег уже существует, делаем список
+                if not isinstance(result[child.tag], list):
+                    result[child.tag] = [result[child.tag]]
+                result[child.tag].append(child_data)
+            else:
+                result[child.tag] = child_data
+        
+        # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
+        if not result and element.text and element.text.strip():
+            text = element.text.strip()
+            # Пробуем преобразовать к числу
+            if text.isdigit():
+                return int(text)
+            else:
+                try:
+                    return float(text)
+                except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
+                    return text
+        
+        return result
+    
+    def merge_dicts(self, default, override):
+        """
+        Объединяет два словаря, заполняя отсутствующие поля значениями по умолчанию
+        
+        Args:
+            default (dict): Словарь по умолчанию
+            override (dict): Переопределяющий словарь
+            
+        Returns:
+            dict: Объединенный словарь
+        """
+        result = default.copy()
+        
+        for key, value in override.items():
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = self.merge_dicts(result[key], value)
+            else:
+                result[key] = value
+        
+        return result
+    
     def save_player_settings(self, player_id, settings):
         """
         Сохраняет настройки игрока в XML-файл
@@ -2163,6 +1635,37 @@ class PlayerSettingsManager:
         # Сохраняем XML
         tree = ET.ElementTree(root)
         tree.write(settings_path, encoding="utf-8", xml_declaration=True)
+    
+    def dict_to_xml(self, tag, d):
+        """
+        Преобразует словарь в XML-элемент
+        
+        Args:
+            tag (str): Тег корневого элемента
+            d (dict): Словарь для преобразования
+            
+        Returns:
+            Element: XML-элемент
+        """
+        elem = ET.Element(tag)
+        for key, value in d.items():
+            if isinstance(value, dict):
+                child = self.dict_to_xml(key, value)
+                elem.append(child)
+            elif isinstance(value, list):
+                # Для списков создаем отдельные элементы
+                list_elem = ET.SubElement(elem, key)
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        child = self.dict_to_xml("item", item)
+                        list_elem.append(child)
+                    else:
+                        item_elem = ET.SubElement(list_elem, f"item_{i}")
+                        item_elem.text = str(item)
+            else:
+                child = ET.SubElement(elem, key)
+                child.text = str(value)
+        return elem
     
     def get_player_setting(self, player_id, *keys):
         """
@@ -2202,189 +1705,7 @@ class PlayerSettingsManager:
         
         settings_ref[keys[-1]] = value
         self.save_player_settings(player_id, settings)
-    
-    def merge_dicts(self, default, override):
-        """
-        Объединяет два словаря, заполняя отсутствующие поля значениями по умолчанию
-        
-        Args:
-            default (dict): Словарь по умолчанию
-            override (dict): Переопределяющий словарь
-            
-        Returns:
-            dict: Объединенный словарь
-        """
-        result = default.copy()
-        
-        for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self.merge_dicts(result[key], value)
-            else:
-                result[key] = value
-        
-        return result
-    
-    def dict_to_xml(self, tag, d):
-        """
-        Преобразует словарь в XML-элемент
-        
-        Args:
-            tag (str): Тег корневого элемента
-            d (dict): Словарь для преобразования
-            
-        Returns:
-            Element: XML-элемент
-        """
-        elem = ET.Element(tag)
-        for key, value in d.items():
-            if isinstance(value, dict):
-                child = self.dict_to_xml(key, value)
-                elem.append(child)
-            elif isinstance(value, list):
-                # Для списков создаем отдельные элементы
-                list_elem = ET.SubElement(elem, key)
-                for item in value:
-                    if isinstance(item, dict):
-                        child = self.dict_to_xml("item", item)
-                        list_elem.append(child)
-                    else:
-                        item_elem = ET.SubElement(list_elem, "item")
-                        item_elem.text = str(item)
-            else:
-                child = ET.SubElement(elem, key)
-                child.text = str(value)
-        return elem
-    
-    def xml_to_dict(self, element):
-        """
-        Преобразует XML-элемент в словарь
-        
-        Args:
-            element: XML-элемент для преобразования
-            
-        Returns:
-            dict: Словарь с данными элемента
-        """
-        result = {}
-        
-        # Обрабатываем дочерние элементы
-        for child in element:
-            child_data = self.xml_to_dict(child)
-            
-            if child.tag in result:
-                # Если тег уже существует, делаем список
-                if not isinstance(result[child.tag], list):
-                    result[child.tag] = [result[child.tag]]
-                result[child.tag].append(child_data)
-            else:
-                result[child.tag] = child_data
-        
-        # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
-        if not result and element.text.strip():
-            try:
-                # Пробуем преобразовать в число
-                if '.' in element.text:
-                    return float(element.text)
-                else:
-                    return int(element.text)
-            except ValueError:
-                # Если не число, возвращаем текст
-                if element.text.lower() in ['true', 'false']:
-                    return element.text.lower() == 'true'
-                return element.text.strip()
-        
-        return result
-```
 
-</details>
-
-#### Задание 1.4: Система инвентаря в XML
-
-Реализуйте систему инвентаря, которая сохраняет и загружает предметы в формате XML:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
-
-class InventoryManager:
-    """
-    Система управления инвентарем игрока с сохранением в XML
-    """
-    def __init__(self, inventories_directory="inventories"):
-        self.inventories_directory = Path(inventories_directory)
-        self.inventories_directory.mkdir(exist_ok=True)
-        self.max_inventory_size = 50  # Максимальное количество предметов в инвентаре
-    
-    def create_inventory(self, player_id, initial_items=None):
-        """
-        Создает новый инвентарь для игрока
-        
-        Args:
-            player_id (str): ID игрока
-            initial_items (list): Начальные предметы (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание инвентаря
-        pass  # Замените на ваш код
-    
-    def add_item(self, player_id, item):
-        """
-        Добавляет предмет в инвентарь игрока
-        
-        Args:
-            player_id (str): ID игрока
-            item (dict): Предмет для добавления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте добавление предмета
-        pass  # Замените на ваш код
-    
-    def remove_item(self, player_id, item_id):
-        """
-        Удаляет предмет из инвентаря игрока
-        
-        Args:
-            player_id (str): ID игрока
-            item_id (str): ID предмета для удаления
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте удаление предмета
-        pass  # Замените на ваш код
-    
-    def get_inventory(self, player_id):
-        """
-        Возвращает инвентарь игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            list: Список предметов в инвентаре
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение инвентаря
-        pass  # Замените на ваш код
-
-# Пример структуры предмета:
-# {
-#   "id": "sword_001",
-#   "name": "Стальной меч",
-#   "type": "weapon",
-#   "rarity": "common",
-#   "properties": {
-#     "damage": 15,
-#     "durability": 100,
-#     "durability_max": 100
-#   },
-#   "quantity": 1,
-#   "equipped": False
-# }
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
 
 class InventoryManager:
     """
@@ -2481,6 +1802,57 @@ class InventoryManager:
         self.save_inventory_xml(player_id, root)
         return True
     
+    def load_inventory_xml(self, player_id):
+        """
+        Загружает XML-структуру инвентаря игрока
+        
+        Args:
+            player_id (str): ID игрока
+            
+        Returns:
+            Element: Корневой элемент инвентаря или None, если файл не найден
+        """
+        inventory_path = self.inventories_directory / f"{player_id}.xml"
+        
+        if not inventory_path.exists():
+            return None
+        
+        try:
+            tree = ET.parse(inventory_path)
+            return tree.getroot()
+        except ET.ParseError:
+            print(f"Ошибка чтения инвентаря игрока {player_id}")
+            return None
+    
+    def create_empty_inventory_xml(self, player_id):
+        """
+        Создает пустую XML-структуру инвентаря
+        
+        Args:
+            player_id (str): ID игрока
+            
+        Returns:
+            Element: Корневой элемент инвентаря
+        """
+        root = ET.Element("inventory")
+        root.set("player_id", player_id)
+        root.set("created_at", datetime.now().isoformat())
+        root.set("max_size", str(self.max_inventory_size))
+        
+        return root
+    
+    def save_inventory_xml(self, player_id, root):
+        """
+        Сохраняет XML-структуру инвентаря
+        
+        Args:
+            player_id (str): ID игрока
+            root: Корневой элемент инвентаря
+        """
+        inventory_path = self.inventories_directory / f"{player_id}.xml"
+        tree = ET.ElementTree(root)
+        tree.write(inventory_path, encoding="utf-8", xml_declaration=True)
+    
     def remove_item(self, player_id, item_id):
         """
         Удаляет предмет из инвентаря игрока
@@ -2538,8 +1910,11 @@ class InventoryManager:
                         else:
                             properties[prop_elem.tag] = int(prop_elem.text)
                     except ValueError:
-                        # Если не число, сохраняем как строку
-                        properties[prop_elem.tag] = prop_elem.text
+                        # Если не число, проверяем на булево или оставляем строкой
+                        if prop_elem.text.lower() in ['true', 'false']:
+                            properties[prop_elem.tag] = prop_elem.text.lower() == 'true'
+                        else:
+                            properties[prop_elem.tag] = prop_elem.text
                 item["properties"] = properties
             else:
                 item["properties"] = {}
@@ -2547,202 +1922,7 @@ class InventoryManager:
             items.append(item)
         
         return items
-    
-    def load_inventory_xml(self, player_id):
-        """
-        Загружает XML-структуру инвентаря игрока
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            Element: Корневой элемент инвентаря или None, если файл не найден
-        """
-        inventory_path = self.inventories_directory / f"{player_id}.xml"
-        
-        if not inventory_path.exists():
-            return None
-        
-        try:
-            tree = ET.parse(inventory_path)
-            return tree.getroot()
-        except ET.ParseError:
-            print(f"Ошибка чтения инвентаря игрока {player_id}")
-            return None
-    
-    def create_empty_inventory_xml(self, player_id):
-        """
-        Создает пустую XML-структуру инвентаря
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            Element: Корневой элемент инвентаря
-        """
-        root = ET.Element("inventory")
-        root.set("player_id", player_id)
-        root.set("created_at", datetime.now().isoformat())
-        root.set("max_size", str(self.max_inventory_size))
-        
-        return root
-    
-    def save_inventory_xml(self, player_id, root):
-        """
-        Сохраняет XML-структуру инвентаря
-        
-        Args:
-            player_id (str): ID игрока
-            root: Корневой элемент инвентаря
-        """
-        inventory_path = self.inventories_directory / f"{player_id}.xml"
-        tree = ET.ElementTree(root)
-        tree.write(inventory_path, encoding="utf-8", xml_declaration=True)
-```
 
-</details>
-
-### Уровень 2 - Средний
-
-#### Задание 2.3: Система ачивок с XML-хранилищем
-
-Создайте систему ачивок, которая использует XML для хранения прогресса:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
-
-class AchievementManager:
-    """
-    Система управления достижениями с XML-хранилищем
-    """
-    def __init__(self, achievements_file="achievements.xml", progress_directory="achievement_progress"):
-        self.achievements_file = Path(achievements_file)
-        self.progress_directory = Path(progress_directory)
-        self.progress_directory.mkdir(exist_ok=True)
-        
-        # Стандартные достижения
-        self.default_achievements = [
-            {
-                "id": "first_steps",
-                "name": "Первые шаги",
-                "description": "Сделайте первые шаги в игре",
-                "type": "exploration",
-                "target": 1,
-                "rewards": {"xp": 100, "coins": 50}
-            },
-            {
-                "id": "veteran_player",
-                "name": "Опытный игрок",
-                "description": "Играть в течение 10 часов",
-                "type": "playtime",
-                "target": 36000,  # 10 часов в секундах
-                "rewards": {"xp": 1000, "special_title": "Ветеран"}
-            },
-            {
-                "id": "monster_hunter",
-                "name": "Охотник на монстров",
-                "description": "Победить 100 монстров",
-                "type": "combat",
-                "target": 100,
-                "rewards": {"xp": 500, "rare_item": "hunter_medal"}
-            }
-        ]
-        
-        self.achievements = self.load_achievements()
-    
-    def load_achievements(self):
-        """
-        Загружает список достижений из XML-файла
-        
-        Returns:
-            list: Список достижений
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку достижений
-        pass  # Замените на ваш код
-    
-    def save_achievements(self):
-        """
-        Сохраняет список достижений в XML-файл
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение достижений
-        pass  # Замените на ваш код
-    
-    def load_player_progress(self, player_id):
-        """
-        Загружает прогресс достижений игрока из XML-файла
-        
-        Args:
-            player_id (str): ID игрока
-            
-        Returns:
-            dict: Прогресс достижений игрока
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку прогресса игрока
-        pass  # Замените на ваш код
-    
-    def save_player_progress(self, player_id, progress):
-        """
-        Сохраняет прогресс достижений игрока в XML-файл
-        
-        Args:
-            player_id (str): ID игрока
-            progress (dict): Прогресс для сохранения
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте сохранение прогресса игрока
-        pass  # Замените на ваш код
-    
-    def grant_achievement(self, player_id, achievement_id):
-        """
-        Выдает достижение игроку
-        
-        Args:
-            player_id (str): ID игрока
-            achievement_id (str): ID достижения для выдачи
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте выдачу достижения
-        pass  # Замените на ваш код
-    
-    def update_achievement_progress(self, player_id, achievement_id, progress_increment=1):
-        """
-        Обновляет прогресс по достижению
-        
-        Args:
-            player_id (str): ID игрока
-            achievement_id (str): ID достижения
-            progress_increment (int): Прирост прогресса
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление прогресса
-        pass  # Замените на ваш код
-
-# Пример структуры файла достижений:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <achievements>
-#   <achievement id="first_win" name="Первая победа" type="combat" target="1">
-#     <description>Одолейте первого противника</description>
-#     <rewards>
-#       <reward type="xp">200</reward>
-#       <reward type="coins">100</reward>
-#     </rewards>
-#   </achievement>
-# </achievements>
-
-# Пример структуры прогресса игрока:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <progress>
-#   <achievement id="first_steps" achieved="true" achieved_at="2023-10-15T10:30:00" progress="1"/>
-#   <achievement id="veteran_player" achieved="false" progress="18000"/>
-# </progress>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
 
 class AchievementManager:
     """
@@ -2999,17 +2179,7 @@ class AchievementManager:
         
         self.save_player_progress(player_id, player_progress)
         return True
-```
 
-</details>
-
-#### Задание 2.4: Система локаций с XML-описанием
-
-Разработайте систему игровых локаций с описанием в XML:
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
 
 class LocationManager:
     """
@@ -3020,99 +2190,6 @@ class LocationManager:
         self.connections_file = Path(connections_file)
         self.locations = {}
         self.location_connections = {}
-        
-        self.load_all_locations()
-        self.load_connections()
-    
-    def load_all_locations(self):
-        """
-        Загружает все локации из XML-файлов в директории
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех локаций
-        pass  # Замените на ваш код
-    
-    def load_location(self, location_id):
-        """
-        Загружает конкретную локацию из XML-файла
-        
-        Args:
-            location_id (str): ID локации для загрузки
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конкретной локации
-        pass  # Замените на ваш код
-    
-    def get_connected_locations(self, location_id):
-        """
-        Возвращает список подключенных локаций
-        
-        Args:
-            location_id (str): ID локации
-            
-        Returns:
-            list: Список подключенных локаций
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте получение подключенных локаций
-        pass  # Замените на ваш код
-    
-    def find_path(self, start_location, end_location):
-        """
-        Находит путь между двумя локациями
-        
-        Args:
-            start_location (str): ID начальной локации
-            end_location (str): ID конечной локации
-            
-        Returns:
-            list: Список локаций в пути (или None, если путь не найден)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте поиск пути
-        pass  # Замените на ваш код
-
-# Пример структуры XML-файла локации (например, forest.xml):
-# <?xml version="1.0" encoding="UTF-8"?>
-# <location id="forest" name="Темный лес">
-#   <description>Густой лес, полный опасностей и сокровищ</description>
-#   <type>wilderness</type>
-#   <level_range min="1" max="10"/>
-#   <weather>mixed</weather>
-#   <resources>wood, herbs, berries</resources>
-#   <monsters>
-#     <monster name="wolf" level="2" count="5"/>
-#     <monster name="giant_spider" level="5" count="2"/>
-#   </monsters>
-#   <connected_locations>village, cave</connected_locations>
-# </location>
-
-# Пример структуры файла соединений (location_connections.xml):
-# <?xml version="1.0" encoding="UTF-8"?>
-# <connections>
-#   <connection from="forest" to="village"/>
-#   <connection from="forest" to="cave"/>
-#   <connection from="forest" to="river"/>
-#   <connection from="village" to="forest"/>
-#   <connection from="village" to="castle"/>
-#   <connection from="cave" to="forest"/>
-#   <connection from="cave" to="underground_lake"/>
-# </connections>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from pathlib import Path
-from collections import deque, defaultdict
-
-class LocationManager:
-    """
-    Система управления игровыми локациями с XML-описанием
-    """
-    def __init__(self, locations_directory="locations", connections_file="location_connections.xml"):
-        self.locations_directory = Path(locations_directory)
-        self.connections_file = Path(connections_file)
-        self.locations = {}
-        self.location_connections = defaultdict(list)
         
         self.load_all_locations()
         self.load_connections()
@@ -3274,6 +2351,8 @@ class LocationManager:
                     from_loc = connection_elem.get("from")
                     to_loc = connection_elem.get("to")
                     if from_loc and to_loc:
+                        if from_loc not in self.location_connections:
+                            self.location_connections[from_loc] = []
                         self.location_connections[from_loc].append(to_loc)
             except ET.ParseError:
                 print(f"Ошибка чтения файла соединений: {self.connections_file}")
@@ -3282,6 +2361,8 @@ class LocationManager:
             for loc_id, loc_data in self.locations.items():
                 if 'connected_locations' in loc_data:
                     for connected_loc in loc_data['connected_locations']:
+                        if loc_id not in self.location_connections:
+                            self.location_connections[loc_id] = []
                         self.location_connections[loc_id].append(connected_loc)
             
             # Сохраняем соединения в файл
@@ -3325,6 +2406,8 @@ class LocationManager:
         Returns:
             list: Список локаций в пути (или None, если путь не найден)
         """
+        from collections import deque
+        
         if start_location not in self.location_connections or end_location not in self.location_connections:
             return None
         
@@ -3345,136 +2428,7 @@ class LocationManager:
                     queue.append((neighbor, new_path))
         
         return None  # Путь не найден
-```
 
-</details>
-
-### Уровень 3 - Повышенный
-
-#### Задание 3.3: Комплексная игровая система с XML-конфигурацией
-
-Создайте комплексную систему, объединяющую несколько игровых аспектов с XML-конфигурацией:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
-
-class GameWorldManager:
-    """
-    Комплексная система управления игровым миром с XML-конфигурацией
-    """
-    def __init__(self, config_directory="world_config"):
-        self.config_directory = Path(config_directory)
-        self.game_entities = {}  # Все игровые сущности
-        self.entity_templates = {}  # Шаблоны для разных типов сущностей
-        self.entity_schemas = {}  # Схемы валидации для разных типов
-        
-        self.load_world_config()
-    
-    def load_world_config(self):
-        """
-        Загружает конфигурацию игрового мира из XML-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку конфигурации мира
-        pass  # Замените на ваш код
-    
-    def create_entity_from_template(self, entity_type, entity_id, **properties):
-        """
-        Создает игровую сущность из шаблона с дополнительными свойствами
-        
-        Args:
-            entity_type (str): Тип сущности
-            entity_id (str): ID сущности
-            **properties: Дополнительные свойства для переопределения
-        
-        Returns:
-            dict: Созданная игровая сущность
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте создание сущности из шаблона
-        pass  # Замените на ваш код
-    
-    def update_entity(self, entity_id_with_type, **updates):
-        """
-        Обновляет свойства игровой сущности
-        
-        Args:
-            entity_id_with_type (str): ID сущности в формате "type:id"
-            **updates: Обновляемые свойства
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте обновление сущности
-        pass  # Замените на ваш код
-    
-    def validate_entity_data(self, entity_element, entity_type):
-        """
-        Проверяет корректность данных игровой сущности
-        
-        Args:
-            entity_element (Element): XML-элемент сущности для проверки
-            entity_type (str): Тип сущности
-            
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных
-        pass  # Замените на ваш код
-    
-    def export_world_state(self, export_name, entities_filter=None):
-        """
-        Экспортирует состояние игрового мира в XML-файл
-        
-        Args:
-            export_name (str): Имя для экспорта
-            entities_filter (callable): Функция для фильтрации сущностей (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте экспорт состояния мира
-        pass  # Замените на ваш код
-    
-    def import_world_state(self, import_name):
-        """
-        Импортирует состояние игрового мира из XML-файла
-        
-        Args:
-            import_name (str): Имя импортируемого состояния
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте импорт состояния мира
-        pass  # Замените на ваш код
-
-# Пример структуры файла конфигурации сущности (например, templates/characters.xml):
-# <?xml version="1.0" encoding="UTF-8"?>
-# <templates>
-#   <character id="warrior" type="character">
-#     <template>
-#       <health>100</health>
-#       <attack>20</attack>
-#       <defense>15</defense>
-#       <skills>basic_attack,shield_block</skills>
-#       <attributes>
-#         <strength>15</strength>
-#         <agility>10</agility>
-#         <intelligence>5</intelligence>
-#       </attributes>
-#     </template>
-#   </character>
-#   <monster id="goblin" type="monster">
-#     <template>
-#       <health>30</health>
-#       <attack>8</attack>
-#       <defense>3</defense>
-#       <loot_table>coins: 5-10, health_potion: 10%</loot_table>
-#       <xp_reward>15</xp_reward>
-#     </template>
-#   </monster>
-# </templates>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from pathlib import Path
 
 class GameWorldManager:
     """
@@ -3561,23 +2515,24 @@ class GameWorldManager:
         
         # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
         if not result and element.text.strip():
-            # Пробуем преобразовать к числу
             text = element.text.strip()
-            if text.lower() in ['true', 'false']:
-                return text.lower() == 'true'
-            elif text.isdigit():
+            # Пробуем преобразовать к числу
+            if text.isdigit():
                 return int(text)
             else:
                 try:
                     return float(text)
                 except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
                     return text
         
         return result
     
     def dict_to_xml(self, tag, d, parent=None):
         """
-        Преобразует словарь в XML-элемент
+        Преобразует словарь в XML-элемент и добавляет к родительскому элементу
         
         Args:
             tag (str): Тег элемента
@@ -3596,11 +2551,12 @@ class GameWorldManager:
             if isinstance(value, dict):
                 self.dict_to_xml(key, value, elem)
             elif isinstance(value, list):
-                for item in value:
+                list_elem = ET.SubElement(elem, key)
+                for i, item in enumerate(value):
                     if isinstance(item, dict):
-                        self.dict_to_xml(key, item, elem)
+                        self.dict_to_xml("item", item, list_elem)
                     else:
-                        item_elem = ET.SubElement(elem, key)
+                        item_elem = ET.SubElement(list_elem, f"item_{i}")
                         item_elem.text = str(item)
             else:
                 subelem = ET.SubElement(elem, key)
@@ -3739,7 +2695,7 @@ class GameWorldManager:
                                         errors.append(f"Значение атрибута {attr_name} по пути {path} должно быть целым числом, получено: {attr_value}")
                                 elif expected_type == 'boolean':
                                     if attr_value.lower() not in ['true', 'false', '1', '0']:
-                                        errors.append(f"Значение атрибута {attr_name} по пути {path} должно быть булевым, получено: {attr_value}")
+                                        errors.append(f"Значение атрибута {attr_name} по пути {path} должно быть булевым значением, получено: {attr_value}")
                         else:  # Это дочерний элемент
                             child = element.find(key)
                             if child is None:
@@ -3768,7 +2724,7 @@ class GameWorldManager:
                     if element.text.lower() not in ['true', 'false', '1', '0']:
                         errors.append(f"Ожидается булево по пути {path}, получено: {element.text}")
         
-        # В данном случае мы не можем напрямую передать XML-элемент, поэтому пропускаем эту проверку
+        # Note: We can't directly pass an XML element here, so we skip this validation
         # validate_recursive(entity_element, schema)
         
         return len(errors) == 0, errors
@@ -3837,7 +2793,7 @@ class GameWorldManager:
                         'id': entity_id,
                         'type': entity_type,
                         'created_at': entity_elem.get("created_at"),
-                        'data': self.xml_to_dict(data_elem)
+                        'data': self.xml_element_to_dict(data_elem)
                     }
                     
                     if entity_elem.get("updated_at"):
@@ -3850,166 +2806,51 @@ class GameWorldManager:
         except ET.ParseError:
             print(f"Ошибка чтения файла импорта: {import_path}")
             return False
-```
-
-</details>
-
-#### Задание 3.4: Система событий и квестов с XML-валидацией
-
-Разработайте систему событий и квестов с валидацией XML-данных:
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
-from pathlib import Path
-
-class EventQuestManager:
-    """
-    Система управления событиями и квестами с XML-валидацией
-    """
-    def __init__(self, events_directory="events", quests_directory="quests", validation_schema_file="validation_schema.xml"):
-        self.events_directory = Path(events_directory)
-        self.quests_directory = Path(quests_directory)
-        self.validation_schema_file = Path(validation_schema_file)
-        
-        self.events = {}
-        self.quests = {}
-        self.player_events = {}
-        self.player_quests = {}
-        
-        self.validation_schemas = self.load_validation_schemas()
-        
-        self.load_all_events()
-        self.load_all_quests()
     
-    def load_validation_schemas(self):
+    def xml_element_to_dict(self, element):
         """
-        Загружает схемы валидации из XML-файла
-        
-        Returns:
-            dict: Словарь схем валидации
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку схем валидации
-        pass  # Замените на ваш код
-    
-    def load_all_events(self):
-        """
-        Загружает все игровые события из XML-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех событий
-        pass  # Замените на ваш код
-    
-    def load_all_quests(self):
-        """
-        Загружает все квесты из XML-файлов
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте загрузку всех квестов
-        pass  # Замените на ваш код
-    
-    def validate_event_data(self, event_element):
-        """
-        Проверяет корректность данных события
+        Преобразует XML-элемент в словарь
         
         Args:
-            event_element (Element): XML-элемент события для проверки
+            element: XML-элемент для преобразования
             
         Returns:
-            tuple: (корректны ли данные, список ошибок)
+            dict: Словарь с данными элемента
         """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных события
-        pass  # Замените на ваш код
-    
-    def validate_quest_data(self, quest_element):
-        """
-        Проверяет корректность данных квеста
+        result = {}
         
-        Args:
-            quest_element (Element): XML-элемент квеста для проверки
+        # Добавляем атрибуты
+        result.update(element.attrib)
+        
+        # Обрабатываем дочерние элементы
+        for child in element:
+            child_data = self.xml_element_to_dict(child)
             
-        Returns:
-            tuple: (корректны ли данные, список ошибок)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте проверку корректности данных квеста
-        pass  # Замените на ваш код
-    
-    def schedule_event_for_player(self, player_id, event_id, custom_params=None):
-        """
-        Назначает событие игроку с возможностью кастомизации
+            if child.tag in result:
+                # Если тег уже существует, делаем список
+                if not isinstance(result[child.tag], list):
+                    result[child.tag] = [result[child.tag]]
+                result[child.tag].append(child_data)
+            else:
+                result[child.tag] = child_data
         
-        Args:
-            player_id (str): ID игрока
-            event_id (str): ID события
-            custom_params (dict): Кастомные параметры для события (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение события игроку
-        pass  # Замените на ваш код
-    
-    def assign_quest_to_player(self, player_id, quest_id, difficulty_multiplier=1.0):
-        """
-        Назначает квест игроку с возможностью изменения сложности
+        # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
+        if not result and element.text and element.text.strip():
+            text = element.text.strip()
+            # Пробуем преобразовать к числу
+            if text.isdigit():
+                return int(text)
+            else:
+                try:
+                    return float(text)
+                except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
+                    return text
         
-        Args:
-            player_id (str): ID игрока
-            quest_id (str): ID квеста
-            difficulty_multiplier (float): Множитель сложности (опционально)
-        """
-        # ВАШ КОД ЗДЕСЬ - реализуйте назначение квеста игроку
-        pass  # Замените на ваш код
+        return result
 
-# Пример структуры файла валидации (validation_schema.xml):
-# <?xml version="1.0" encoding="UTF-8"?>
-# <schemas>
-#   <schema type="event">
-#     <required>
-#       <field>id</field>
-#       <field>name</field>
-#       <field>start_time</field>
-#       <field>duration</field>
-#     </required>
-#     <fields>
-#       <field name="id" type="string" required="true"/>
-#       <field name="name" type="string" required="true"/>
-#       <field name="start_time" type="datetime" required="true"/>
-#       <field name="duration" type="integer" min="1" required="true"/>
-#       <field name="location" type="string"/>
-#       <rewards type="object">
-#         <field name="xp" type="integer"/>
-#         <field name="items" type="array"/>
-#       </rewards>
-#     </fields>
-#   </schema>
-#   <schema type="quest">
-#     <required>
-#       <field>id</field>
-#       <field>name</field>
-#       <field>objective</field>
-#       <field>rewards</field>
-#     </required>
-#     <fields>
-#       <field name="id" type="string" required="true"/>
-#       <field name="name" type="string" required="true"/>
-#       <objective type="object" required="true">
-#         <field name="type" type="string" required="true"/>
-#         <field name="target" type="integer" required="true"/>
-#         <field name="description" type="string"/>
-#       </objective>
-#       <rewards type="object" required="true">
-#         <field name="xp" type="integer"/>
-#         <field name="gold" type="integer"/>
-#         <field name="items" type="array"/>
-#       </rewards>
-#     </fields>
-#   </schema>
-# </schemas>
-```
-
-<details>
-<summary>Подсказка (раскройте, если нужна помощь)</summary>
-
-```python
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
-from pathlib import Path
 
 class EventQuestManager:
     """
@@ -4155,16 +2996,17 @@ class EventQuestManager:
         
         # Если у элемента нет дочерних элементов, но есть текст, сохраняем его
         if not result and element.text.strip():
-            # Пробуем преобразовать к числу
             text = element.text.strip()
-            if text.lower() in ['true', 'false']:
-                return text.lower() == 'true'
-            elif text.isdigit():
+            # Пробуем преобразовать к числу
+            if text.isdigit():
                 return int(text)
             else:
                 try:
                     return float(text)
                 except ValueError:
+                    # Проверяем на булево
+                    if text.lower() in ['true', 'false']:
+                        return text.lower() == 'true'
                     return text
         
         return result
@@ -4201,22 +3043,21 @@ class EventQuestManager:
                     errors.append(f"Обязательное поле отсутствует: {field_name}")
         
         # Проверяем конкретные поля
-        duration_text = event_element.find("duration")
-        if duration_text is not None:
+        duration_elem = event_element.find("duration")
+        if duration_elem is not None:
             try:
-                duration_val = int(duration_text.text)
-                min_val = int(field_schema.get('min', 1)) if field_name == 'duration' else 1
-                if duration_val < min_val:
-                    errors.append(f"Значение поля duration меньше минимально допустимого: {min_val}")
+                duration_val = int(duration_elem.text)
+                if duration_val < 1:
+                    errors.append(f"Значение поля duration должно быть положительным, получено: {duration_val}")
             except ValueError:
-                errors.append(f"Поле duration должно быть целым числом, получено: {duration_text.text}")
+                errors.append(f"Поле duration должно быть целым числом, получено: {duration_elem.text}")
         
-        start_time_text = event_element.find("start_time")
-        if start_time_text is not None:
+        start_time_elem = event_element.find("start_time")
+        if start_time_elem is not None:
             try:
-                datetime.fromisoformat(start_time_text.text.replace('Z', '+00:00'))
+                datetime.fromisoformat(start_time_elem.text.replace('Z', '+00:00'))
             except ValueError:
-                errors.append(f"Поле start_time имеет неверный формат даты-времени: {start_time_text.text}")
+                errors.append(f"Поле start_time имеет неверный формат даты-времени: {start_time_elem.text}")
         
         return len(errors) == 0, errors
     
@@ -4252,7 +3093,6 @@ class EventQuestManager:
                     errors.append(f"Обязательное поле отсутствует: {field_name}")
         
         # Проверяем конкретные поля
-        # Проверяем цель квеста
         objective_elem = quest_element.find("objective")
         if objective_elem is not None:
             target_elem = objective_elem.find("target")
@@ -4281,14 +3121,16 @@ class EventQuestManager:
             self.player_events[player_id] = {}
         
         # Копируем событие и применяем кастомные параметры
-        event_data = self.events[event_id].copy()
+        scheduled_event = self.events[event_id].copy()
         if custom_params:
-            event_data.update(custom_params)
+            for param, value in custom_params.items():
+                if param in scheduled_event:
+                    scheduled_event[param] = value
         
         # Добавляем время назначения
-        event_data['scheduled_at'] = datetime.now().isoformat()
+        scheduled_event['scheduled_at'] = datetime.now().isoformat()
         
-        self.player_events[player_id][event_id] = event_data
+        self.player_events[player_id][event_id] = scheduled_event
         return True
     
     def assign_quest_to_player(self, player_id, quest_id, difficulty_multiplier=1.0):
@@ -4325,33 +3167,62 @@ class EventQuestManager:
         
         self.player_quests[player_id][quest_id] = assigned_quest
         return True
-```
 
-</details>
 
----
-
-## 3. Дополнительные задания
-
-### Задание 4: Система модов с XML-описанием зависимостей
-
-Разработайте систему модов, которая использует XML для описания зависимостей и конфликтов между модами:
-1. Создайте систему проверки совместимости модов
-2. Реализуйте автоматическое разрешение конфликтов
-3. Добавьте систему версий модов и совместимости
-
-### Задание 5: Система сохранения прогресса с шифрованием
-
-Реализуйте систему сохранения прогресса с использованием XML и дополнительным шифрованием:
-1. Создайте систему шифрования XML-файлов сохранений
-2. Реализуйте безопасное хранение чувствительных данных
-3. Добавьте проверку целостности сохранений
-
----
-
-## Контрольные вопросы:
-1. Какие основные функции предоставляет модуль xml.etree.ElementTree в Python?
-2. Как парсить и создавать XML-документы в Python?
-3. Как обрабатывать пространства имен в XML?
-4. Какие игровые системы наиболее эффективно использовать с XML?
-5. Как обеспечить безопасность при работе с XML-файлами (XXE и т.д.)?
+# Примеры использования классов
+if __name__ == "__main__":
+    print("=== Примеры использования игровых классов ===\n")
+    
+    # Пример использования класса GameConfig
+    print("--- Класс GameConfig ---")
+    config = GameConfig()
+    current_resolution = config.get_setting("resolution", "width")
+    print(f"Текущее разрешение по ширине: {current_resolution}")
+    config.set_setting(1280, "resolution", "width")
+    config.save_config()
+    print()
+    
+    # Пример использования класса Player
+    print("--- Класс Player ---")
+    player = Player("Алекс", 5, 150, (10.5, 20.3))
+    print(f"Игрок: {player.name}, уровень: {player.level}, здоровье: {player.health}")
+    print()
+    
+    # Пример использования системы сохранения игрока
+    print("--- Система сохранения прогресса игрока ---")
+    manager = PlayerProgressManager()
+    manager.save_player_progress(player, "save1")
+    loaded_player = manager.load_player_progress("save1")
+    if loaded_player:
+        print(f"Загруженный игрок: {loaded_player.name}, уровень: {loaded_player.level}")
+    print()
+    
+    # Пример использования класса InventoryManager
+    print("--- Класс InventoryManager ---")
+    inv_manager = InventoryManager()
+    sample_item = {
+        "id": "sword_001",
+        "name": "Стальной меч",
+        "type": "weapon",
+        "rarity": "common",
+        "properties": {
+            "damage": 15,
+            "durability": 100,
+            "durability_max": 100
+        },
+        "quantity": 1,
+        "equipped": False
+    }
+    inv_manager.add_item("player1", sample_item)
+    inventory = inv_manager.get_inventory("player1")
+    print(f"Инвентарь игрока: {inventory}")
+    print()
+    
+    # Пример использования класса AchievementManager
+    print("--- Класс AchievementManager ---")
+    ach_manager = AchievementManager()
+    ach_manager.update_achievement_progress("player1", "first_steps", 1)
+    ach_manager.grant_achievement("player1", "first_steps")
+    print()
+    
+    print("Все игровые классы успешно реализованы и готовы к использованию!")

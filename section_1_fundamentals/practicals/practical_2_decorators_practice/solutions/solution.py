@@ -1,6 +1,6 @@
-# Упражнения для практического задания 2: Создание декораторов в игровом контексте
+# Решения для практического задания 2: Создание декораторов в игровом контексте
 
-# Ниже приведены заготовки для игровых декораторов, которые необходимо реализовать согласно заданию
+# Ниже приведены полные реализации игровых декораторов согласно заданию
 
 
 def log_game_action(func):
@@ -350,6 +350,9 @@ class Character:
         self.health = max(0, self.health - damage)
         print(f"{self.name} получил {damage} урона. Осталось здоровья: {self.health}")
 
+    def __str__(self):
+        return f"Character(name='{self.name}', health={self.health})"
+
 
 class Mage:
     def __init__(self, name, mana=100):
@@ -366,6 +369,9 @@ class Mage:
         else:
             return f"{self.name} не хватает маны для заклинания"
 
+    def __str__(self):
+        return f"Mage(name='{self.name}', mana={self.mana})"
+
 
 class Wizard:
     def __init__(self, name, mana=50):
@@ -381,6 +387,9 @@ class Wizard:
     def cast_teleport(self):
         """Произнесение заклинания телепортации"""
         return f"{self.name} телепортируется!"
+
+    def __str__(self):
+        return f"Wizard(name='{self.name}', mana={self.mana})"
 
 
 class EnhancedCharacter:
@@ -407,6 +416,9 @@ class EnhancedCharacter:
     def cast_spell(self, spell_name):
         """Произнесение заклинания"""
         return f"{self.name} произносит заклинание {spell_name}"
+
+    def __str__(self):
+        return f"EnhancedCharacter(name='{self.name}', health={self.health}, effects={self.effects})"
 
 
 class AdvancedCharacter:
@@ -465,6 +477,9 @@ class AdvancedCharacter:
         print(f"Вычисляется интеллект для {self.name}: {total}")
         return total
 
+    def __str__(self):
+        return f"AdvancedCharacter(name='{self.name}', strength={self.strength}, agility={self.agility}, intelligence={self.intelligence})"
+
 
 class Warrior:
     def __init__(self, name, level=1, rage=0):
@@ -483,6 +498,9 @@ class Warrior:
         """Использовать вращающийся удар по нескольким целям"""
         return f"{self.name} использует вращающийся удар по {len(targets)} целям!"
 
+    def __str__(self):
+        return f"Warrior(name='{self.name}', level={self.level}, rage={self.rage})"
+
 
 class Paladin:
     def __init__(self, name):
@@ -492,6 +510,9 @@ class Paladin:
     def cast_divine_shield(self):
         """Произнесение божественного щита"""
         return f"{self.name} использует божественный щит!"
+
+    def __str__(self):
+        return f"Paladin(name='{self.name}')"
 
 
 class GameCharacter:
@@ -508,6 +529,9 @@ class GameCharacter:
     def use_melee_ability(self, target):
         """Использовать ближнюю способность"""
         return f"{self.name} использует ближнюю способность против {target}"
+
+    def __str__(self):
+        return f"GameCharacter(name='{self.name}', class='{self.char_class}')"
 
 
 class EffectCharacter:
@@ -538,6 +562,9 @@ class EffectCharacter:
         print(f"{self.name} активирует ядовитую ловушку на {target.name}")
         return f"Ловушка активирована на {target.name}"
 
+    def __str__(self):
+        return f"EffectCharacter(name='{self.name}', effects={self.effects})"
+
 
 class CombatCharacter:
     def __init__(self, name, crit_chance_bonus=0):
@@ -560,6 +587,9 @@ class CombatCharacter:
         print(f"{self.name} выполняет специальную атаку по {target.name}")
         return base_damage
 
+    def __str__(self):
+        return f"CombatCharacter(name='{self.name}', crit_bonus={self.crit_chance_bonus})"
+
 
 class GameEntity:
     def __init__(self, name, health=100, mana=50, stamina=100):
@@ -568,6 +598,12 @@ class GameEntity:
         self.mana = mana
         self.stamina = stamina
         self.cooldowns = {}
+
+    def add_effect(self, effect_name, duration):
+        """Добавить эффект к сущности"""
+        if not hasattr(self, 'effects'):
+            self.effects = {}
+        self.effects[effect_name] = duration
 
     @game_mechanic(
         required_resources={'mana': 20},
@@ -587,3 +623,110 @@ class GameEntity:
     def power_strike(self, target):
         """Мощный удар"""
         return f"{self.name} наносит мощный удар по {target.name}!"
+
+    def __str__(self):
+        return f"GameEntity(name='{self.name}', health={self.health}, mana={self.mana}, stamina={self.stamina})"
+
+
+# Примеры использования декораторов
+if __name__ == "__main__":
+    print("=== Примеры использования игровых декораторов ===\n")
+    
+    # Пример использования декоратора log_game_action
+    print("--- Декоратор log_game_action ---")
+    @log_game_action
+    def cast_spell(character, spell_name, mana_cost):
+        """Функция произнесения заклинания персонажем"""
+        return f"{character} произносит заклинание {spell_name}"
+    
+    result = cast_spell("Герой", "Огненный шар", 20)
+    print(f"Результат: {result}\n")
+    
+    # Пример использования декоратора timing_game_action
+    print("--- Декоратор timing_game_action ---")
+    @timing_game_action
+    def cast_heavy_spell():
+        """Функция, которая имитирует произнесение сложного заклинания"""
+        import time
+        time.sleep(0.5)
+        return "Заклинание исцеления произнесено!"
+    
+    result = cast_heavy_spell()
+    print(f"Результат: {result}\n")
+    
+    # Пример использования декоратора check_alive
+    print("--- Декоратор check_alive ---")
+    hero = Character("Герой", 50)
+    enemy = Character("Враг", 30)
+    
+    print("Атака живого персонажа:")
+    hero.attack(enemy, 10)
+    print()
+    
+    print("Убиваем героя и пробуем снова атаковать:")
+    hero.health = 0
+    hero.attack(enemy, 10)
+    print()
+    
+    # Пример использования декоратора log_action
+    print("--- Декоратор log_action ---")
+    mage = Mage("Маг", 30)
+    result = mage.cast_fireball("Дракон")
+    print(f"Результат: {result}\n")
+    
+    # Пример использования декоратора requires_mana
+    print("--- Декоратор requires_mana ---")
+    wizard = Wizard("Волшебник", 20)
+    result = wizard.cast_lightning_bolt("Гоблин")
+    print(f"Результат: {result}")
+    
+    result = wizard.cast_teleport()  # Не хватит маны
+    print(f"Результат: {result}\n")
+    
+    # Пример использования декоратора conditional_effect
+    print("--- Декоратор conditional_effect ---")
+    enhanced_char = EnhancedCharacter("Эльф", 40)
+    result = enhanced_char.attack(enemy, 15)
+    print(f"Результат: {result}")
+    
+    enhanced_char.add_effect("stunned")
+    result = enhanced_char.attack(enemy, 15)
+    print(f"Результат: {result}\n")
+    
+    # Пример использования декоратора cached_property
+    print("--- Декоратор cached_property ---")
+    advanced_char = AdvancedCharacter("Рыцарь", 15, 12, 8)
+    print(f"Сила: {advanced_char.strength}")
+    print(f"Сила (второй вызов): {advanced_char.strength}")  # Не должно вычисляться снова
+    
+    advanced_char.add_buff("strength", 5)
+    print(f"Сила после баффа: {advanced_char.strength}")  # Должно вычислиться снова
+    print()
+    
+    # Пример использования декоратора limited_uses
+    print("--- Декоратор limited_uses ---")
+    paladin = Paladin("Святой")
+    for i in range(4):
+        result = paladin.cast_divine_shield()
+        print(f"Попытка {i+1}: {result}")
+    print()
+    
+    # Пример использования декоратора critical_hit
+    print("--- Декоратор critical_hit ---")
+    combat_char = CombatCharacter("Боец", 1)
+    enemy2 = Character("Монстр", 100)
+    
+    for i in range(5):
+        result = combat_char.special_attack(enemy2, 20)
+        print(f"Атака {i+1}: {result}")
+    print()
+    
+    # Пример использования декоратора game_mechanic
+    print("--- Декоратор game_mechanic ---")
+    entity = GameEntity("Тестовая сущность", 100, 50, 100)
+    result = entity.divine_protection()
+    print(f"Результат: {result}")
+    print(f"Состояние сущности после использования: {entity}")
+    print()
+    
+    print("Все игровые декораторы успешно реализованы и готовы к использованию!")

@@ -1,18 +1,19 @@
-# Упражнения для практического задания 6: Работа с модулями os и sys в игровом контексте
+# Решения для практического задания 6: Работа с модулями os и sys в игровом контексте
 
-# Ниже приведены заготовки для игровых систем, которые необходимо реализовать согласно заданию
+# Ниже приведены полные реализации игровых систем с использованием модулей os и sys согласно заданию
 
 
 import os
 import sys
 from pathlib import Path
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import json
 import hashlib
 import pytz
 import psutil
 from collections import deque
+import random
 
 
 # Задание 1.1: Создание менеджера игровых файлов
@@ -196,10 +197,10 @@ class ModManager:
     
     def scan_mods(self):
         """
-        Сканирует каталог модов и возвращает список доступных модов
+        Сканирует каталог на наличие модов
         
         Returns:
-            list: Список доступных модов
+            list: Список найденных модов
         """
         available_mods = []
         
@@ -242,10 +243,10 @@ class ModManager:
     
     def load_mod(self, mod_name):
         """
-        Загружает мод в игру
+        Загружает указанный мод
         
         Args:
-            mod_name (str): Название мода для загрузки
+            mod_name (str): Имя мода для загрузки
         """
         if mod_name not in self.mod_manifests:
             print(f"Мод {mod_name} не найден")
@@ -268,10 +269,10 @@ class ModManager:
     
     def unload_mod(self, mod_name):
         """
-        Выгружает мод из игры
+        Выгружает указанный мод
         
         Args:
-            mod_name (str): Название мода для выгрузки
+            mod_name (str): Имя мода для выгрузки
         """
         if mod_name in self.active_mods:
             # Проверяем, не зависят ли другие активные моды от этого
@@ -823,7 +824,7 @@ class ResourceManager:
         Предзагружает указанные ресурсы в кэш
         
         Args:
-            resource_list (list): Список ресурсов для предзагрузки в формате (тип, имя)
+            resource_list (list): Список ресурсов для предзагрузки
         """
         for resource_type, resource_name in resource_list:
             try:
@@ -834,21 +835,17 @@ class ResourceManager:
             except Exception as e:
                 print(f"Ошибка предзагрузки ресурса {resource_type}/{resource_name}: {e}")
     
-    def cleanup_cache(self, max_size_mb=None):
+    def cleanup_cache(self, max_size_mb=100):
         """
         Очищает кэш, если он превышает максимальный размер
         
         Args:
-            max_size_mb (int): Максимальный размер кэша в МБ (опционально)
+            max_size_mb (int): Максимальный размер кэша в МБ
         """
-        if max_size_mb is None:
-            max_size = self.max_cache_size
-        else:
-            max_size = max_size_mb * 1024 * 1024
+        max_size = max_size_mb * 1024 * 1024
         
         # Простая стратегия очистки: удаляем половину самых старых элементов
         if self.cache_size > max_size:
-            # Сортируем ключи по времени последнего обращения (в реальной системе нужно отслеживать это)
             items_to_remove = len(self.resource_cache) // 2
             keys_to_remove = list(self.resource_cache.keys())[:items_to_remove]
             
@@ -876,6 +873,9 @@ if __name__ == "__main__":
     print("--- Система конфигурации ---")
     config = GameConfig()
     config.print_config_summary()
+    errors = config.validate_config()
+    if errors:
+        print(f"Ошибки валидации: {errors}")
     print()
     
     # Пример использования ModManager
@@ -883,6 +883,8 @@ if __name__ == "__main__":
     mod_manager = ModManager()
     mods = mod_manager.scan_mods()
     print(f"Найдено модов: {len(mods)}")
+    if mods:
+        mod_manager.load_mod(mods[0]['name'])
     print()
     
     # Пример использования GameLogger
