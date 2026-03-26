@@ -94,14 +94,14 @@ graph TD
 
 ```mermaid
 graph LR
-    subgraph "ACID (SQL)<br/>Строгая согласованность"
+    subgraph "ACID (SQL)b Строгая согласованность"
         A[Atomicity<br/>Атомарность]
         B[Consistency<br/>Согласованность]
         C[Isolation<br/>Изоляция]
         D[Durability<br/>Долговечность]
     end
     
-    subgraph "BASE (NoSQL)<br/>Доступность и масштабируемость"
+    subgraph "BASE (NoSQL) Доступность и масштабируемость"
         E[Basically Available<br/>Основная доступность]
         F[Soft state<br/>Мягкое состояние]
         G[Eventually consistent<br/>Согласованность<br/>в конечном итоге]
