@@ -29,12 +29,12 @@ NoSQL (Not Only SQL) — подход к хранению данных, отли
 ```mermaid
 timeline
     title Эволюция систем хранения данных
-    1970s : [Реляционные БД <br/> (Codd, IBM)]
-    1980s : SQL стандарт<br/>Oracle, DB2
-    1990s : Web-приложения<br/>MySQL, PostgreSQL
-    2000s : Big Data<br/>NoSQL движение
-    2010s : Полиглотное<br/>хранение
-    2020s : Облачные<br/>решения
+    1970s : Реляционные БД  (Codd, IBM)
+    1980s : SQL стандарт (Oracle, DB2)
+    1990s : Web-приложения(MySQL, PostgreSQL)
+    2000s : Big Data (NoSQL движение)
+    2010s : Полиглотное хранение
+    2020s : Облачныерешения
 ```
 
 ### Причины появления NoSQL:
